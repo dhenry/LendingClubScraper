@@ -38,4 +38,17 @@ fieldName=totalPayments
 # --field-end--
 # --table-fields-end--
 # --table-end--
+# --table-start--
+dataClass=com.dhenry.lendingclubscraper.app.orm.model.UserData
+tableName=user
+# --table-fields-start--
+# --field-start--
+fieldName=userEmail
+id=true
+# --field-end--
+# --field-start--
+fieldName=password
+# --field-end--
+# --table-fields-end--
+# --table-end--
 #################################

@@ -1,22 +1,32 @@
 package com.dhenry.lendingclubscraper.app.view;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.util.Pair;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.dhenry.lendingclubscraper.app.R;
+import com.dhenry.lendingclubscraper.app.consts.LendingClubConstants;
 import com.dhenry.lendingclubscraper.app.loader.AccountSummaryScraperTask;
 import com.dhenry.lendingclubscraper.app.orm.DatabaseHelper;
 import com.dhenry.lendingclubscraper.app.orm.model.AccountSummaryData;
+import com.dhenry.lendingclubscraper.app.orm.model.UserData;
 import com.j256.ormlite.android.apptools.OrmLiteBaseActivity;
+import com.j256.ormlite.dao.RuntimeExceptionDao;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -28,21 +38,24 @@ public class LoginActivity extends OrmLiteBaseActivity<DatabaseHelper> implement
 
     public final static String LOG_TAG = LoginActivity.class.getCanonicalName();
 
+    private RuntimeExceptionDao<UserData, String> userDao = null;
+
+    private AutoCompleteTextView usernameInput;
+    private EditText passwordInput;
+    private Button loginButton;
+    private CheckBox saveUser;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-        final TextView usernameInput = (TextView) this.findViewById(R.id.usernameInput);
-        final EditText passwordInput = (EditText) this.findViewById(R.id.passwordInput);
-        Button loginButton = (Button) this.findViewById(R.id.loginButton);
+        usernameInput = (AutoCompleteTextView) this.findViewById(R.id.usernameInput);
+        passwordInput = (EditText) this.findViewById(R.id.passwordInput);
+        loginButton = (Button) this.findViewById(R.id.loginButton);
+        saveUser = (CheckBox) this.findViewById(R.id.saveUser);
 
-        AccountSummaryData accountSummaryData = getFirstUsersAccountSummary();
-
-        if (accountSummaryData != null) {
-            usernameInput.setText(accountSummaryData.getUserEmail());
-            passwordInput.setText("C4hauc6p"); // TODO users table
-        }
+        userDao = getHelper().getRuntimeExceptionDao(UserData.class);
 
         loginButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -55,19 +68,52 @@ public class LoginActivity extends OrmLiteBaseActivity<DatabaseHelper> implement
         });
     }
 
-    private AccountSummaryData getFirstUsersAccountSummary() {
-        AccountSummaryData accountSummaryData = null;
+    @Override
+    protected void onResume() {
+        super.onResume();
 
-        try {
-            List<AccountSummaryData> accountSummaryDataList = getHelper().getDao(AccountSummaryData.class).queryForAll();
-            if (accountSummaryDataList.size() > 0) {
-                accountSummaryData = accountSummaryDataList.get(0);
-            }
-        } catch(SQLException e) {
-            Log.e(LOG_TAG, "Caught SQLException => " + e.getMessage());
+        prepareUserAutocomplete();
+        passwordInput.setText("");
+
+        usernameInput.selectAll();
+        usernameInput.requestFocus();
+        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.toggleSoftInput(InputMethodManager.SHOW_FORCED,0);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+
+        InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.hideSoftInputFromWindow(usernameInput.getWindowToken(), 0);
+    }
+
+    /**
+     * Set up auto complete values for the username input and add a listener for auto completing the
+     * password input.
+     */
+    private void prepareUserAutocomplete() {
+
+        List<UserData> users = userDao.queryForAll();
+
+        List<String> usernames = new ArrayList<String>(users.size());
+
+        for (UserData user: users) {
+            usernames.add(user.getUserEmail());
         }
 
-        return accountSummaryData;
+        usernameInput.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, usernames));
+
+        usernameInput.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+            @Override
+            public void onItemClick(AdapterView<?> parent, View textView, int pos, long id) {
+
+                UserData user = userDao.queryForId( ((TextView)textView).getText().toString() );
+                passwordInput.setText(user.getPassword());
+            }
+        });
     }
 
     /**
@@ -84,15 +130,24 @@ public class LoginActivity extends OrmLiteBaseActivity<DatabaseHelper> implement
      */
     public void onScraperSuccess(final AccountSummaryData result) {
 
-        // insert or update the result
+        UserData currentUser = new UserData(result.getUserEmail(), passwordInput.getText().toString());
+
+        // insert or update the result along with the user that logged in
         try {
             getHelper().getDao(AccountSummaryData.class).createOrUpdate(result);
+
+            // store the user details
+            if (saveUser.isChecked()) {
+                userDao.createOrUpdate(currentUser);
+            }
+
         } catch (SQLException e) {
             Log.e(LOG_TAG, "Caught SQLException => " + e.getMessage());
         }
 
         // begin the activity
         Intent accountOverviewIntent = new Intent(this, AccountOverviewActivity.class);
+        accountOverviewIntent.putExtra(LendingClubConstants.CURRENT_USER, currentUser);
         startActivity(accountOverviewIntent);
     }
 }

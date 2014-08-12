@@ -8,10 +8,13 @@ import android.widget.Button;
 import android.widget.Toast;
 
 import com.dhenry.lendingclubscraper.app.R;
+import com.dhenry.lendingclubscraper.app.consts.LendingClubConstants;
 import com.dhenry.lendingclubscraper.app.orm.DatabaseHelper;
 import com.dhenry.lendingclubscraper.app.orm.model.AccountSummaryData;
+import com.dhenry.lendingclubscraper.app.orm.model.UserData;
 import com.dhenry.lendingclubscraper.app.util.NumberFormats;
 import com.j256.ormlite.android.apptools.OrmLiteBaseListActivity;
+import com.j256.ormlite.dao.RuntimeExceptionDao;
 
 import java.text.NumberFormat;
 
@@ -35,23 +38,30 @@ public class AccountOverviewActivity extends OrmLiteBaseListActivity<DatabaseHel
         adapter = new KeyValueAdapter(this);
         setListAdapter(adapter);
 
-        populateAccountSummaryList();
+        final UserData currentUser = getIntent().getParcelableExtra(LendingClubConstants.CURRENT_USER);
+
+        populateAccountSummaryList(currentUser);
 
         accountDetailsButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent accountDetailsIntent = new Intent(AccountOverviewActivity.this, AccountDetailsActivity.class);
+                accountDetailsIntent.putExtra(LendingClubConstants.CURRENT_USER, currentUser);
                 startActivity(accountDetailsIntent);
             }
         });
     }
 
     /**
-     * Grab the AccountSummaryData from the ContentResolver and turn each field into a row in the
-     * listView.
+     * Grab the AccountSummaryData associated with the currently logged in user and render a list row
+     * for each data point.
+     *
+     * @param currentUser the currently logged in user
      */
-    private void populateAccountSummaryList() {
-        AccountSummaryData accountSummaryData = getHelper().getRuntimeExceptionDao(AccountSummaryData.class).queryForAll().get(0);
+    private void populateAccountSummaryList(final UserData currentUser) {
+
+        RuntimeExceptionDao<AccountSummaryData, String> dao = getHelper().getRuntimeExceptionDao(AccountSummaryData.class);
+        AccountSummaryData accountSummaryData = dao.queryForId(currentUser.getUserEmail());
 
         if (accountSummaryData == null) {
             Toast.makeText(this, "No Account Summary Information available to display..", Toast.LENGTH_LONG).show();

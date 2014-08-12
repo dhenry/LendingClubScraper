@@ -7,10 +7,12 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 import com.dhenry.lendingclubscraper.app.R;
+import com.dhenry.lendingclubscraper.app.consts.LendingClubConstants;
 import com.dhenry.lendingclubscraper.app.loader.AccountDetailScraperTask;
 import com.dhenry.lendingclubscraper.app.orm.DatabaseHelper;
 import com.dhenry.lendingclubscraper.app.orm.model.AccountDetailsData;
 import com.dhenry.lendingclubscraper.app.orm.model.AccountSummaryData;
+import com.dhenry.lendingclubscraper.app.orm.model.UserData;
 import com.dhenry.lendingclubscraper.app.util.NumberFormats;
 import com.j256.ormlite.android.apptools.OrmLiteBaseListActivity;
 
@@ -31,13 +33,13 @@ public class AccountDetailsActivity extends OrmLiteBaseListActivity<DatabaseHelp
         adapter = new KeyValueAdapter(this);
         setListAdapter(adapter);
 
-        AccountSummaryData accountSummaryData = getHelper().getRuntimeExceptionDao(AccountSummaryData.class).queryForAll().get(0);
+        UserData user = getIntent().getParcelableExtra(LendingClubConstants.CURRENT_USER);
 
-        if (accountSummaryData == null) {
-            Toast.makeText(this, "Account summary information missing. Try login again... :/", Toast.LENGTH_LONG).show();
+        if (user == null) {
+            Toast.makeText(this, "User information missing. Try login again... :/", Toast.LENGTH_LONG).show();
         } else {
             new AccountDetailScraperTask(this).execute(
-                    new Pair<String, String>(accountSummaryData.getUserEmail(), "C4hauc6p"));
+                    new Pair<String, String>(user.getUserEmail(), user.getPassword()));
         }
     }
 

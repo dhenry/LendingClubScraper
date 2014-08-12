@@ -10,7 +10,7 @@ import com.j256.ormlite.table.DatabaseTable;
 public class AccountSummaryData implements Parcelable {
 
     @DatabaseField(id = true)
-    private String userEmail; // todo create foreign key to USER table when that table exists
+    private String userEmail;
 
     @DatabaseField
     private double netAnnualizedReturn;
@@ -49,24 +49,6 @@ public class AccountSummaryData implements Parcelable {
                               double adjustedAccountValues, double interestReceived,
                               double availableCash, double inFundingNotes, double outstandingPrinciple,
                               double accountValue, double pastDueNotesAdjustment, double totalPayments) {
-        this.userEmail = userEmail;
-        this.netAnnualizedReturn = netAnnualizedReturn;
-        this.adjustedNetAnnualizedReturn = adjustedNetAnnualizedReturn;
-        this.adjustedAccountValues = adjustedAccountValues;
-        this.interestReceived = interestReceived;
-        this.availableCash = availableCash;
-        this.inFundingNotes = inFundingNotes;
-        this.outstandingPrinciple = outstandingPrinciple;
-        this.accountValue = accountValue;
-        this.pastDueNotesAdjustment = pastDueNotesAdjustment;
-        this.totalPayments = totalPayments;
-    }
-
-    public AccountSummaryData(long KEY_ID, String userEmail, double netAnnualizedReturn, double adjustedNetAnnualizedReturn,
-                              double adjustedAccountValues, double interestReceived, double availableCash,
-                              double inFundingNotes, double outstandingPrinciple, double accountValue,
-                              double pastDueNotesAdjustment, double totalPayments) {
-
         this.userEmail = userEmail;
         this.netAnnualizedReturn = netAnnualizedReturn;
         this.adjustedNetAnnualizedReturn = adjustedNetAnnualizedReturn;

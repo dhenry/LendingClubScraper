@@ -18,8 +18,10 @@
             android:layout_weight="0.25"
             android:layout_height="wrap_content" />
 
-        <EditText
+        <AutoCompleteTextView
             android:id="@+id/usernameInput"
+            android:focusableInTouchMode="true"
+            android:selectAllOnFocus = "true"
             android:layout_width="0dp"
             android:layout_weight="0.75"
             android:inputType="text"
@@ -53,5 +55,12 @@
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:text="@string/login"/>
+
+    <CheckBox
+        android:id="@+id/saveUser"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/rememberUser"
+        android:checked="true" />
 
 </LinearLayout>

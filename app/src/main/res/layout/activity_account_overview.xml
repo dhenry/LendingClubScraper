@@ -1,0 +1,33 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical"
+    tools:context="com.dhenry.lendingclubscraper.app.view.AccountOverviewActivity">
+
+    <ListView
+        android:id="@android:id/list"
+        android:layout_weight="1"
+        android:layout_width="fill_parent"
+        android:layout_height="0dp"
+        android:drawSelectorOnTop="false" />
+
+    <TableRow android:layout_height="wrap_content"
+        android:layout_width="fill_parent"
+        android:layout_gravity="bottom">
+
+        <Button
+        android:id="@+id/account_details_button"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/get_account_details"
+        android:background="@android:color/transparent"
+        android:layout_weight="1"
+        android:singleLine="true"
+        android:paddingRight="10dp"
+        android:minHeight="60dp" />
+
+    </TableRow>
+
+
+</LinearLayout>

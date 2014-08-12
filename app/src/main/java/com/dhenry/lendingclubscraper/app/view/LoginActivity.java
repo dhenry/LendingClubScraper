@@ -13,6 +13,7 @@ import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -44,6 +45,7 @@ public class LoginActivity extends OrmLiteBaseActivity<DatabaseHelper> implement
     private EditText passwordInput;
     private Button loginButton;
     private CheckBox saveUser;
+    private ProgressBar progressIndicator;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,12 +56,15 @@ public class LoginActivity extends OrmLiteBaseActivity<DatabaseHelper> implement
         passwordInput = (EditText) this.findViewById(R.id.passwordInput);
         loginButton = (Button) this.findViewById(R.id.loginButton);
         saveUser = (CheckBox) this.findViewById(R.id.saveUser);
+        progressIndicator = (ProgressBar) findViewById(R.id.progressIndicator);
 
         userDao = getHelper().getRuntimeExceptionDao(UserData.class);
 
         loginButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                showLoadingIndicator(true);
+
                 AccountSummaryScraperTask accountSummaryDownloadTask = new AccountSummaryScraperTask(LoginActivity.this);
                 accountSummaryDownloadTask.execute(new Pair<String, String>(
                         usernameInput.getText().toString(),
@@ -78,7 +83,7 @@ public class LoginActivity extends OrmLiteBaseActivity<DatabaseHelper> implement
         usernameInput.selectAll();
         usernameInput.requestFocus();
         InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-        imm.toggleSoftInput(InputMethodManager.SHOW_FORCED,0);
+        imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
     }
 
     @Override
@@ -87,6 +92,12 @@ public class LoginActivity extends OrmLiteBaseActivity<DatabaseHelper> implement
 
         InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
         imm.hideSoftInputFromWindow(usernameInput.getWindowToken(), 0);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        showLoadingIndicator(false);
     }
 
     /**
@@ -116,11 +127,22 @@ public class LoginActivity extends OrmLiteBaseActivity<DatabaseHelper> implement
         });
     }
 
+    private void showLoadingIndicator(boolean visible) {
+        if (visible) {
+            loginButton.setEnabled(false);
+            progressIndicator.setVisibility(View.VISIBLE);
+        } else {
+            loginButton.setEnabled(true);
+            progressIndicator.setVisibility(View.INVISIBLE);
+        }
+    }
+
     /**
      * Indicate that login failed.
      * @param exception the exception that caused the login failure
      */
     public void onScraperFailure(final Exception exception) {
+        showLoadingIndicator(false);
         Toast.makeText(this,"Login Failed:" + exception.getMessage(), Toast.LENGTH_LONG).show();
     }
 
@@ -129,7 +151,6 @@ public class LoginActivity extends OrmLiteBaseActivity<DatabaseHelper> implement
      * @param result the resulting {@link AccountSummaryData}
      */
     public void onScraperSuccess(final AccountSummaryData result) {
-
         UserData currentUser = new UserData(result.getUserEmail(), passwordInput.getText().toString());
 
         // insert or update the result along with the user that logged in

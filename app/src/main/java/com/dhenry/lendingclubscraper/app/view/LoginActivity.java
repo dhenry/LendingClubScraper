@@ -1,9 +1,7 @@
 package com.dhenry.lendingclubscraper.app.view;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.RemoteException;
 import android.util.Log;
 import android.util.Pair;
 import android.view.View;
@@ -14,32 +12,32 @@ import android.widget.Toast;
 
 import com.dhenry.lendingclubscraper.app.R;
 import com.dhenry.lendingclubscraper.app.loader.AccountSummaryScraperTask;
+import com.dhenry.lendingclubscraper.app.orm.DatabaseHelper;
 import com.dhenry.lendingclubscraper.app.orm.model.AccountSummaryData;
-import com.dhenry.lendingclubscraper.app.orm.LendingClubResolver;
+import com.j256.ormlite.android.apptools.OrmLiteBaseActivity;
+
+import java.sql.SQLException;
+import java.util.List;
 
 
 /**
  * Displays inputs for entering credentials. Tries to login and scrape the resulting html data
  * on login success.
  */
-public class LoginActivity extends Activity implements ScraperUser<AccountSummaryData> {
+public class LoginActivity extends OrmLiteBaseActivity<DatabaseHelper> implements ScraperUser<AccountSummaryData> {
 
     public final static String LOG_TAG = LoginActivity.class.getCanonicalName();
-
-    private LendingClubResolver resolver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-        resolver = new LendingClubResolver(this);
-
         final TextView usernameInput = (TextView) this.findViewById(R.id.usernameInput);
         final EditText passwordInput = (EditText) this.findViewById(R.id.passwordInput);
         Button loginButton = (Button) this.findViewById(R.id.loginButton);
 
-        AccountSummaryData accountSummaryData = resolver.getAccountSummaryData();
+        AccountSummaryData accountSummaryData = getFirstUsersAccountSummary();
 
         if (accountSummaryData != null) {
             usernameInput.setText(accountSummaryData.getUserEmail());
@@ -57,6 +55,21 @@ public class LoginActivity extends Activity implements ScraperUser<AccountSummar
         });
     }
 
+    private AccountSummaryData getFirstUsersAccountSummary() {
+        AccountSummaryData accountSummaryData = null;
+
+        try {
+            List<AccountSummaryData> accountSummaryDataList = getHelper().getDao(AccountSummaryData.class).queryForAll();
+            if (accountSummaryDataList.size() > 0) {
+                accountSummaryData = accountSummaryDataList.get(0);
+            }
+        } catch(SQLException e) {
+            Log.e(LOG_TAG, "Caught SQLException => " + e.getMessage());
+        }
+
+        return accountSummaryData;
+    }
+
     /**
      * Indicate that login failed.
      * @param exception the exception that caused the login failure
@@ -71,12 +84,11 @@ public class LoginActivity extends Activity implements ScraperUser<AccountSummar
      */
     public void onScraperSuccess(final AccountSummaryData result) {
 
-        // insert the result through Resolver to be put into ContentProvider
+        // insert or update the result
         try {
-            resolver.deleteByUserEmail(result);
-            resolver.insert(result);
-        } catch (RemoteException e) {
-            Log.e(LOG_TAG, "Caught RemoteException => " + e.getMessage());
+            getHelper().getDao(AccountSummaryData.class).createOrUpdate(result);
+        } catch (SQLException e) {
+            Log.e(LOG_TAG, "Caught SQLException => " + e.getMessage());
         }
 
         // begin the activity

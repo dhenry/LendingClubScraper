@@ -1,6 +1,5 @@
 package com.dhenry.lendingclubscraper.app.view;
 
-import android.app.ListActivity;
 import android.os.Bundle;
 import android.util.Pair;
 import android.view.View;
@@ -9,19 +8,19 @@ import android.widget.Toast;
 
 import com.dhenry.lendingclubscraper.app.R;
 import com.dhenry.lendingclubscraper.app.loader.AccountDetailScraperTask;
+import com.dhenry.lendingclubscraper.app.orm.DatabaseHelper;
 import com.dhenry.lendingclubscraper.app.orm.model.AccountDetailsData;
 import com.dhenry.lendingclubscraper.app.orm.model.AccountSummaryData;
-import com.dhenry.lendingclubscraper.app.orm.LendingClubResolver;
 import com.dhenry.lendingclubscraper.app.util.NumberFormats;
+import com.j256.ormlite.android.apptools.OrmLiteBaseListActivity;
 
 import java.text.NumberFormat;
 
 /**
  * Author: Dave
  */
-public class AccountDetailsActivity extends ListActivity implements ScraperUser<AccountDetailsData> {
+public class AccountDetailsActivity extends OrmLiteBaseListActivity<DatabaseHelper> implements ScraperUser<AccountDetailsData> {
 
-    private LendingClubResolver resolver;
     private KeyValueAdapter adapter;
 
     @Override
@@ -29,11 +28,10 @@ public class AccountDetailsActivity extends ListActivity implements ScraperUser<
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_account_details);
 
-        resolver = new LendingClubResolver(this);
         adapter = new KeyValueAdapter(this);
         setListAdapter(adapter);
 
-        AccountSummaryData accountSummaryData = resolver.getAccountSummaryData();
+        AccountSummaryData accountSummaryData = getHelper().getRuntimeExceptionDao(AccountSummaryData.class).queryForAll().get(0);
 
         if (accountSummaryData == null) {
             Toast.makeText(this, "Account summary information missing. Try login again... :/", Toast.LENGTH_LONG).show();

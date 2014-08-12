@@ -1,35 +1,54 @@
 package com.dhenry.lendingclubscraper.app.orm.model;
 
-import android.content.ContentValues;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import com.dhenry.lendingclubscraper.app.orm.AccountSummaryCreator;
+import com.j256.ormlite.field.DatabaseField;
+import com.j256.ormlite.table.DatabaseTable;
 
-/**
- * Author: Dave
- */
+@DatabaseTable(tableName = "accountSummary")
 public class AccountSummaryData implements Parcelable {
 
-    private final long KEY_ID;
+    @DatabaseField(id = true)
     private String userEmail; // todo create foreign key to USER table when that table exists
+
+    @DatabaseField
     private double netAnnualizedReturn;
+
+    @DatabaseField
     private double adjustedNetAnnualizedReturn;
+
+    @DatabaseField
     private double adjustedAccountValues;
+
+    @DatabaseField
     private double interestReceived;
+
+    @DatabaseField
     private double availableCash;
+
+    @DatabaseField
     private double inFundingNotes;
+
+    @DatabaseField
     private double outstandingPrinciple;
+
+    @DatabaseField
     private double accountValue;
+
+    @DatabaseField
     private double pastDueNotesAdjustment;
+
+    @DatabaseField
     private double totalPayments;
 
+    public AccountSummaryData() {
+    }
 
     public AccountSummaryData(String userEmail, double netAnnualizedReturn, double adjustedNetAnnualizedReturn,
                               double adjustedAccountValues, double interestReceived,
                               double availableCash, double inFundingNotes, double outstandingPrinciple,
                               double accountValue, double pastDueNotesAdjustment, double totalPayments) {
-        this.KEY_ID = -1;
         this.userEmail = userEmail;
         this.netAnnualizedReturn = netAnnualizedReturn;
         this.adjustedNetAnnualizedReturn = adjustedNetAnnualizedReturn;
@@ -47,7 +66,7 @@ public class AccountSummaryData implements Parcelable {
                               double adjustedAccountValues, double interestReceived, double availableCash,
                               double inFundingNotes, double outstandingPrinciple, double accountValue,
                               double pastDueNotesAdjustment, double totalPayments) {
-        this.KEY_ID = KEY_ID;
+
         this.userEmail = userEmail;
         this.netAnnualizedReturn = netAnnualizedReturn;
         this.adjustedNetAnnualizedReturn = adjustedNetAnnualizedReturn;
@@ -61,10 +80,6 @@ public class AccountSummaryData implements Parcelable {
         this.totalPayments = totalPayments;
     }
 
-    public ContentValues getCV() {
-        return AccountSummaryCreator.getCVfromAccountSummary(this);
-    }
-
     @Override
     public int describeContents() {
         return 0;
@@ -72,7 +87,6 @@ public class AccountSummaryData implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeLong(KEY_ID);
         dest.writeString(userEmail);
         dest.writeDouble(netAnnualizedReturn);
         dest.writeDouble(adjustedNetAnnualizedReturn);
@@ -104,7 +118,6 @@ public class AccountSummaryData implements Parcelable {
      * Used for writing a copy of this object to a Parcel, do not manually call.
      */
     private AccountSummaryData(Parcel in) {
-        KEY_ID = in.readLong();
         userEmail = in.readString();
         netAnnualizedReturn = in.readDouble();
         adjustedNetAnnualizedReturn = in.readDouble();

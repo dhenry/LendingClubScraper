@@ -1,6 +1,5 @@
 package com.dhenry.lendingclubscraper.app.view;
 
-import android.app.ListActivity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Pair;
@@ -9,18 +8,18 @@ import android.widget.Button;
 import android.widget.Toast;
 
 import com.dhenry.lendingclubscraper.app.R;
+import com.dhenry.lendingclubscraper.app.orm.DatabaseHelper;
 import com.dhenry.lendingclubscraper.app.orm.model.AccountSummaryData;
-import com.dhenry.lendingclubscraper.app.orm.LendingClubResolver;
 import com.dhenry.lendingclubscraper.app.util.NumberFormats;
+import com.j256.ormlite.android.apptools.OrmLiteBaseListActivity;
 
 import java.text.NumberFormat;
 
 /**
  * Author: Dave
  */
-public class AccountOverviewActivity extends ListActivity {
+public class AccountOverviewActivity extends OrmLiteBaseListActivity<DatabaseHelper> {
 
-    private LendingClubResolver resolver;
     private KeyValueAdapter adapter;
 
     private Button accountDetailsButton;
@@ -32,8 +31,6 @@ public class AccountOverviewActivity extends ListActivity {
         setContentView(R.layout.activity_account_overview);
 
         accountDetailsButton = (Button)findViewById(R.id.account_details_button);
-
-        resolver = new LendingClubResolver(this);
 
         adapter = new KeyValueAdapter(this);
         setListAdapter(adapter);
@@ -54,7 +51,7 @@ public class AccountOverviewActivity extends ListActivity {
      * listView.
      */
     private void populateAccountSummaryList() {
-        AccountSummaryData accountSummaryData = resolver.getAccountSummaryData();
+        AccountSummaryData accountSummaryData = getHelper().getRuntimeExceptionDao(AccountSummaryData.class).queryForAll().get(0);
 
         if (accountSummaryData == null) {
             Toast.makeText(this, "No Account Summary Information available to display..", Toast.LENGTH_LONG).show();

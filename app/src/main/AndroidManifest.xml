@@ -29,11 +29,6 @@
             android:label="@string/app_name" >
         </activity>
 
-        <provider android:name="com.dhenry.lendingclubscraper.app.provider.AccountSummaryProvider"
-            android:exported="true"
-            android:enabled="true"
-            android:authorities="com.dhenry.lendingclubscraper.lendingclubprovider"> </provider>
-
     </application>
 
 </manifest>

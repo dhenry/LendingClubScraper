@@ -1,0 +1,41 @@
+# --table-start--
+dataClass=com.dhenry.lendingclubscraper.app.orm.model.AccountSummaryData
+tableName=accountSummary
+# --table-fields-start--
+# --field-start--
+fieldName=userEmail
+id=true
+# --field-end--
+# --field-start--
+fieldName=netAnnualizedReturn
+# --field-end--
+# --field-start--
+fieldName=adjustedNetAnnualizedReturn
+# --field-end--
+# --field-start--
+fieldName=adjustedAccountValues
+# --field-end--
+# --field-start--
+fieldName=interestReceived
+# --field-end--
+# --field-start--
+fieldName=availableCash
+# --field-end--
+# --field-start--
+fieldName=inFundingNotes
+# --field-end--
+# --field-start--
+fieldName=outstandingPrinciple
+# --field-end--
+# --field-start--
+fieldName=accountValue
+# --field-end--
+# --field-start--
+fieldName=pastDueNotesAdjustment
+# --field-end--
+# --field-start--
+fieldName=totalPayments
+# --field-end--
+# --table-fields-end--
+# --table-end--
+#################################

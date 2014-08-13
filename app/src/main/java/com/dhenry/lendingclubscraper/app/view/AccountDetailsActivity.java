@@ -11,7 +11,6 @@ import com.dhenry.lendingclubscraper.app.consts.LendingClubConstants;
 import com.dhenry.lendingclubscraper.app.loader.AccountDetailScraperTask;
 import com.dhenry.lendingclubscraper.app.orm.DatabaseHelper;
 import com.dhenry.lendingclubscraper.app.orm.model.AccountDetailsData;
-import com.dhenry.lendingclubscraper.app.orm.model.AccountSummaryData;
 import com.dhenry.lendingclubscraper.app.orm.model.UserData;
 import com.dhenry.lendingclubscraper.app.util.NumberFormats;
 import com.j256.ormlite.android.apptools.OrmLiteBaseListActivity;
@@ -21,7 +20,7 @@ import java.text.NumberFormat;
 /**
  * Author: Dave
  */
-public class AccountDetailsActivity extends OrmLiteBaseListActivity<DatabaseHelper> implements ScraperUser<AccountDetailsData> {
+public class AccountDetailsActivity extends OrmLiteBaseListActivity<DatabaseHelper> implements ScraperCallback<AccountDetailsData> {
 
     private KeyValueAdapter adapter;
 

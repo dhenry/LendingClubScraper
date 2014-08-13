@@ -35,7 +35,7 @@ import java.util.List;
  * Displays inputs for entering credentials. Tries to login and scrape the resulting html data
  * on login success.
  */
-public class LoginActivity extends OrmLiteBaseActivity<DatabaseHelper> implements ScraperUser<AccountSummaryData> {
+public class LoginActivity extends OrmLiteBaseActivity<DatabaseHelper> implements ScraperCallback<AccountSummaryData> {
 
     public final static String LOG_TAG = LoginActivity.class.getCanonicalName();
 
@@ -65,8 +65,7 @@ public class LoginActivity extends OrmLiteBaseActivity<DatabaseHelper> implement
             public void onClick(View v) {
                 showLoadingIndicator(true);
 
-                AccountSummaryScraperTask accountSummaryDownloadTask = new AccountSummaryScraperTask(LoginActivity.this);
-                accountSummaryDownloadTask.execute(new Pair<String, String>(
+                new AccountSummaryScraperTask(LoginActivity.this).execute(new Pair<String, String>(
                         usernameInput.getText().toString(),
                         passwordInput.getText().toString()));
             }
@@ -137,20 +136,14 @@ public class LoginActivity extends OrmLiteBaseActivity<DatabaseHelper> implement
         }
     }
 
-    /**
-     * Indicate that login failed.
-     * @param exception the exception that caused the login failure
-     */
-    public void onScraperFailure(final Exception exception) {
+    @Override
+    public void onScraperFailure(Exception exception) {
         showLoadingIndicator(false);
-        Toast.makeText(this,"Login Failed:" + exception.getMessage(), Toast.LENGTH_LONG).show();
+        Toast.makeText(LoginActivity.this,"Login Failed:" + exception.getMessage(), Toast.LENGTH_LONG).show();
     }
 
-    /**
-     * Login was successful! Cache the AccountSummaryData in the db and start {@link AccountSummaryData}
-     * @param result the resulting {@link AccountSummaryData}
-     */
-    public void onScraperSuccess(final AccountSummaryData result) {
+    @Override
+    public void onScraperSuccess(AccountSummaryData result) {
         UserData currentUser = new UserData(result.getUserEmail(), passwordInput.getText().toString());
 
         // insert or update the result along with the user that logged in
@@ -167,7 +160,7 @@ public class LoginActivity extends OrmLiteBaseActivity<DatabaseHelper> implement
         }
 
         // begin the activity
-        Intent accountOverviewIntent = new Intent(this, AccountOverviewActivity.class);
+        Intent accountOverviewIntent = new Intent(LoginActivity.this, AccountOverviewActivity.class);
         accountOverviewIntent.putExtra(LendingClubConstants.CURRENT_USER, currentUser);
         startActivity(accountOverviewIntent);
     }

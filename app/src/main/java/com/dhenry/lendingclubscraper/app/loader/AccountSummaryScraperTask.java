@@ -4,7 +4,7 @@ import android.util.Log;
 import android.util.Pair;
 
 import com.dhenry.lendingclubscraper.app.orm.model.AccountSummaryData;
-import com.dhenry.lendingclubscraper.app.view.ScraperUser;
+import com.dhenry.lendingclubscraper.app.view.ScraperCallback;
 
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -21,34 +21,40 @@ public class AccountSummaryScraperTask extends ScraperTask<Pair, Void, AccountSu
 
     public final static String LOG_TAG = AccountSummaryScraperTask.class.getCanonicalName();
 
-    public AccountSummaryScraperTask(ScraperUser<AccountSummaryData> parent) {
-        super(new WeakReference<ScraperUser<AccountSummaryData>>(parent));
+    public AccountSummaryScraperTask(ScraperCallback<AccountSummaryData> parent) {
+        super(new WeakReference<ScraperCallback<AccountSummaryData>>(parent));
     }
 
     @Override
     protected ScraperResult<AccountSummaryData> doInBackground(Pair... credentials) {
         try {
-            Document doc = new LendingClubConnector().login(credentials[0].first.toString(), credentials[0].second.toString());
+
+            LendingClubJSoupConnector jsoupConnector = new LendingClubJSoupConnector();
+            LendingClubRESTConnector restConnector = new LendingClubRESTConnector();
+
+            Document accountSummaryDoc = jsoupConnector.login(credentials[0].first.toString(), credentials[0].second.toString());
+
+            restConnector.viewNetAnnualizedReturnDetails(credentials[0].first.toString(), credentials[0].second.toString());
 
             Double netAnnualizedReturns = 0.0;
             Double adjustedNetAnnualizedReturns = 0.0;
 
             try {
-                netAnnualizedReturns = percentFormat.parse(doc.select("#unadjFirstBox_nar").text()).doubleValue();
-                adjustedNetAnnualizedReturns = percentFormat.parse(doc.select("#adjFirstBox_nar").text()).doubleValue();
+                netAnnualizedReturns = percentFormat.parse(accountSummaryDoc.select("#unadjFirstBox_nar").text()).doubleValue();
+                adjustedNetAnnualizedReturns = percentFormat.parse(accountSummaryDoc.select("#adjFirstBox_nar").text()).doubleValue();
             } catch (ParseException e) {
                 Log.e(LOG_TAG, "Caught ParseException => " + e.getMessage());
             }
 
-            Double adjustedAccountValue = currencyFormat.parse(doc.select("#adjBottomBox2").select(":containsOwn($)").text()).doubleValue();
-            Double inFundingNotes = currencyFormat.parse(doc.select("#account-summary-module3").select(":containsOwn($)").text()).doubleValue();
-            Double outstandingPrinciple = currencyFormat.parse(doc.select("#account-summary-module4").select(":containsOwn($)").text()).doubleValue();
-            Double accountValue = currencyFormat.parse(doc.select("#account-summary-module6").select(":containsOwn($)").text()).doubleValue();
-            Double pastDueNotesAdjustment = currencyFormat.parse(doc.select("#adjBottomBox1").select(":containsOwn($)").text().replaceAll("[^0-9$.]", "")).doubleValue();
+            Double adjustedAccountValue = currencyFormat.parse(accountSummaryDoc.select("#adjBottomBox2").select(":containsOwn($)").text()).doubleValue();
+            Double inFundingNotes = currencyFormat.parse(accountSummaryDoc.select("#account-summary-module3").select(":containsOwn($)").text()).doubleValue();
+            Double outstandingPrinciple = currencyFormat.parse(accountSummaryDoc.select("#account-summary-module4").select(":containsOwn($)").text()).doubleValue();
+            Double accountValue = currencyFormat.parse(accountSummaryDoc.select("#account-summary-module6").select(":containsOwn($)").text()).doubleValue();
+            Double pastDueNotesAdjustment = currencyFormat.parse(accountSummaryDoc.select("#adjBottomBox1").select(":containsOwn($)").text().replaceAll("[^0-9$.]", "")).doubleValue();
 
-            Double availableCash = currencyFormat.parse(doc.select(".available-cash-link").get(0).html().replaceAll("[^0-9$.]", "")).doubleValue();
+            Double availableCash = currencyFormat.parse(accountSummaryDoc.select(".available-cash-link").get(0).html().replaceAll("[^0-9$.]", "")).doubleValue();
 
-            Elements boxValues = doc.select(".box-module");
+            Elements boxValues = accountSummaryDoc.select(".box-module");
 
             Double totalPayments = 0d;
             Double interestReceived  = 0d;

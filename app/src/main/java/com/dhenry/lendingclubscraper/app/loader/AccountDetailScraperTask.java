@@ -4,10 +4,9 @@ import android.util.Log;
 import android.util.Pair;
 
 import com.dhenry.lendingclubscraper.app.orm.model.AccountDetailsData;
-import com.dhenry.lendingclubscraper.app.view.ScraperUser;
+import com.dhenry.lendingclubscraper.app.view.ScraperCallback;
 
 import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.io.IOException;
@@ -21,14 +20,14 @@ public class AccountDetailScraperTask extends ScraperTask<Pair, Void, AccountDet
 
     public final static String LOG_TAG = AccountDetailScraperTask.class.getCanonicalName();
 
-    public AccountDetailScraperTask(ScraperUser<AccountDetailsData> parent) {
-        super(new WeakReference<ScraperUser<AccountDetailsData>>(parent));
+    public AccountDetailScraperTask(ScraperCallback<AccountDetailsData> parent) {
+        super(new WeakReference<ScraperCallback<AccountDetailsData>>(parent));
     }
 
     @Override
     protected ScraperResult<AccountDetailsData> doInBackground(Pair... credentials) {
         try {
-            LendingClubConnector connector = new LendingClubConnector();
+            LendingClubJSoupConnector connector = new LendingClubJSoupConnector();
 
             Document doc = connector.viewAccountDetails(credentials[0].first.toString(), credentials[0].second.toString());
 

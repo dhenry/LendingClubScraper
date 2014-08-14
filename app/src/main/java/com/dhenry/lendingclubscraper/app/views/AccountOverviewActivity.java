@@ -1,4 +1,4 @@
-package com.dhenry.lendingclubscraper.app.view;
+package com.dhenry.lendingclubscraper.app.views;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -8,11 +8,12 @@ import android.widget.Button;
 import android.widget.Toast;
 
 import com.dhenry.lendingclubscraper.app.R;
-import com.dhenry.lendingclubscraper.app.consts.LendingClubConstants;
-import com.dhenry.lendingclubscraper.app.orm.DatabaseHelper;
-import com.dhenry.lendingclubscraper.app.orm.model.AccountSummaryData;
-import com.dhenry.lendingclubscraper.app.orm.model.UserData;
-import com.dhenry.lendingclubscraper.app.util.NumberFormats;
+import com.dhenry.lendingclubscraper.app.constants.LendingClubConstants;
+import com.dhenry.lendingclubscraper.app.persistence.DatabaseHelper;
+import com.dhenry.lendingclubscraper.app.persistence.models.AccountSummaryData;
+import com.dhenry.lendingclubscraper.app.persistence.models.NARCalculationData;
+import com.dhenry.lendingclubscraper.app.persistence.models.UserData;
+import com.dhenry.lendingclubscraper.app.utilities.NumberFormats;
 import com.j256.ormlite.android.apptools.OrmLiteBaseListActivity;
 import com.j256.ormlite.dao.RuntimeExceptionDao;
 
@@ -60,8 +61,11 @@ public class AccountOverviewActivity extends OrmLiteBaseListActivity<DatabaseHel
      */
     private void populateAccountSummaryList(final UserData currentUser) {
 
-        RuntimeExceptionDao<AccountSummaryData, String> dao = getHelper().getRuntimeExceptionDao(AccountSummaryData.class);
-        AccountSummaryData accountSummaryData = dao.queryForId(currentUser.getUserEmail());
+        RuntimeExceptionDao<AccountSummaryData, String> accountSummaryDataDAO = getHelper().getRuntimeExceptionDao(AccountSummaryData.class);
+        RuntimeExceptionDao<NARCalculationData, String> NARCalculationDataDAO = getHelper().getRuntimeExceptionDao(NARCalculationData.class);
+
+        AccountSummaryData accountSummaryData = accountSummaryDataDAO.queryForId(currentUser.getUserEmail());
+        NARCalculationData NARCalculationData = NARCalculationDataDAO.queryForId(currentUser.getUserEmail());
 
         if (accountSummaryData == null) {
             Toast.makeText(this, "No Account Summary Information available to display..", Toast.LENGTH_LONG).show();
@@ -72,9 +76,9 @@ public class AccountOverviewActivity extends OrmLiteBaseListActivity<DatabaseHel
         NumberFormat currencyFormat = NumberFormats.CURRENCY_FORMAT;
 
         adapter.add(new Pair<String, String>("Adjusted Net Annualized Return",
-                percentFormat.format(accountSummaryData.getAdjustedNetAnnualizedReturn())));
-        adapter.add(new Pair<String, String>("Net Annualized Return",
-                percentFormat.format(accountSummaryData.getNetAnnualizedReturn())));
+                percentFormat.format(NARCalculationData.getAdjustedNetAnnualizedReturn())));
+        adapter.add(new Pair<String, String>("Weighted Average Rate",
+                percentFormat.format(NARCalculationData.getWeightedAverageRate())));
         adapter.add(new Pair<String, String>("Total Payments",
                 currencyFormat.format(accountSummaryData.getTotalPayments())));
         adapter.add(new Pair<String, String>("Account Value",

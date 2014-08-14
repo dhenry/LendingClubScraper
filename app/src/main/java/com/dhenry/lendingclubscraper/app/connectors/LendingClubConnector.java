@@ -1,4 +1,4 @@
-package com.dhenry.lendingclubscraper.app.loader;
+package com.dhenry.lendingclubscraper.app.connectors;
 
 import android.util.Pair;
 
@@ -29,16 +29,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Author: Dave
- */
 public abstract class LendingClubConnector {
 
     protected static final String BASE_URL = "https://www.lendingclub.com/";
     protected static final String LC_FIRSTNAME_KEY = "LC_FIRSTNAME";
     protected static final String LC_PROD_GROUP_KEY = "www.lendingclub.com-prod_lcui_grp";
     protected static final String SESSION_ID_KEY = "JSESSIONID-lcui-prod_nevada";
-    protected static final String LC_EMAIL_KEY = "LC_EMAIL";
+
+    protected static final String LOGIN_URI_SUFFIX = "account/login.action";
+    protected static final String ACCOUNT_DETAIL_URI_SUFFIX = "account/lenderAccountDetail.action";
+    protected static final String CALCULATE_NAR_URI_SUFFIX = "account/calculateNar.action";
 
     protected static List<Header> getHeaders() {
         List<Header> headers = new ArrayList<Header>();
@@ -48,17 +48,6 @@ public abstract class LendingClubConnector {
                 "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_3) AppleWebKit/537.31 (KHTML, like Gecko) Chrome/26.0.1410.65 Safari/537.31"));
 
         return headers;
-    }
-
-    protected static List<Cookie> getLoginResponseCookies(Connection.Response loginResponse) {
-        List<Cookie> cookies = new ArrayList<Cookie>();
-
-        cookies.add(new BasicClientCookie(LC_EMAIL_KEY, loginResponse.cookie(LC_EMAIL_KEY)));
-        cookies.add(new BasicClientCookie(LC_FIRSTNAME_KEY, loginResponse.cookie(LC_FIRSTNAME_KEY)));
-        cookies.add(new BasicClientCookie(SESSION_ID_KEY, loginResponse.cookie(SESSION_ID_KEY)));
-        cookies.add(new BasicClientCookie(LC_PROD_GROUP_KEY, loginResponse.cookie(LC_PROD_GROUP_KEY)));
-
-        return cookies;
     }
 
     protected Pair<HttpResponse, List<Cookie>> doRequest(final HttpUriRequest request,
@@ -92,13 +81,11 @@ public abstract class LendingClubConnector {
     }
 
     protected Map<String, Cookie> getLoginResponseCookies(String email, String password) throws IOException {
-        String authenticateUrl = "account/login.action";
-
         List<NameValuePair> requestBody = new ArrayList<NameValuePair>();
         requestBody.add(new BasicNameValuePair("login_email", email));
         requestBody.add(new BasicNameValuePair("login_password", password));
 
-        HttpPost httpPost = new HttpPost(BASE_URL + authenticateUrl);
+        HttpPost httpPost = new HttpPost(BASE_URL + LOGIN_URI_SUFFIX);
 
         for(Header header : getHeaders()) {
             httpPost.addHeader(header);

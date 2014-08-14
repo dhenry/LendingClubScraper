@@ -1,17 +1,17 @@
-package com.dhenry.lendingclubscraper.app.loader;
+package com.dhenry.lendingclubscraper.app.tasks;
 
 /**
  * Author: Dave
  */
-public class ScraperResult<T> {
+public class RemoteTaskResult<T> {
     T result;
     Exception error;
 
-    public ScraperResult(Exception exception) {
+    public RemoteTaskResult(Exception exception) {
         this.error = exception;
     }
 
-    public ScraperResult(T result) {
+    public RemoteTaskResult(T result) {
         this.result = result;
     }
 

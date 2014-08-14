@@ -1,4 +1,4 @@
-package com.dhenry.lendingclubscraper.app.orm.model;
+package com.dhenry.lendingclubscraper.app.persistence.models;
 
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -11,12 +11,6 @@ public class AccountSummaryData implements Parcelable {
 
     @DatabaseField(id = true)
     private String userEmail;
-
-    @DatabaseField
-    private double netAnnualizedReturn;
-
-    @DatabaseField
-    private double adjustedNetAnnualizedReturn;
 
     @DatabaseField
     private double adjustedAccountValues;
@@ -45,13 +39,10 @@ public class AccountSummaryData implements Parcelable {
     public AccountSummaryData() {
     }
 
-    public AccountSummaryData(String userEmail, double netAnnualizedReturn, double adjustedNetAnnualizedReturn,
-                              double adjustedAccountValues, double interestReceived,
+    public AccountSummaryData(String userEmail, double adjustedAccountValues, double interestReceived,
                               double availableCash, double inFundingNotes, double outstandingPrinciple,
                               double accountValue, double pastDueNotesAdjustment, double totalPayments) {
         this.userEmail = userEmail;
-        this.netAnnualizedReturn = netAnnualizedReturn;
-        this.adjustedNetAnnualizedReturn = adjustedNetAnnualizedReturn;
         this.adjustedAccountValues = adjustedAccountValues;
         this.interestReceived = interestReceived;
         this.availableCash = availableCash;
@@ -70,8 +61,6 @@ public class AccountSummaryData implements Parcelable {
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeString(userEmail);
-        dest.writeDouble(netAnnualizedReturn);
-        dest.writeDouble(adjustedNetAnnualizedReturn);
         dest.writeDouble(adjustedAccountValues);
         dest.writeDouble(interestReceived);
         dest.writeDouble(availableCash);
@@ -101,8 +90,6 @@ public class AccountSummaryData implements Parcelable {
      */
     private AccountSummaryData(Parcel in) {
         userEmail = in.readString();
-        netAnnualizedReturn = in.readDouble();
-        adjustedNetAnnualizedReturn = in.readDouble();
         adjustedAccountValues = in.readDouble();
         interestReceived = in.readDouble();
         availableCash = in.readDouble();
@@ -115,14 +102,6 @@ public class AccountSummaryData implements Parcelable {
 
     public String getUserEmail() {
         return userEmail;
-    }
-
-    public double getNetAnnualizedReturn() {
-        return netAnnualizedReturn;
-    }
-
-    public double getAdjustedNetAnnualizedReturn() {
-        return adjustedNetAnnualizedReturn;
     }
 
     public double getAdjustedAccountValues() {

@@ -1,4 +1,4 @@
-package com.dhenry.lendingclubscraper.app.orm.model;
+package com.dhenry.lendingclubscraper.app.persistence.models;
 
 import android.os.Parcel;
 import android.os.Parcelable;

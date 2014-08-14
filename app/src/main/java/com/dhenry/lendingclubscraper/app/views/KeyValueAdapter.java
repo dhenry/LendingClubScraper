@@ -1,4 +1,4 @@
-package com.dhenry.lendingclubscraper.app.view;
+package com.dhenry.lendingclubscraper.app.views;
 
 import android.content.Context;
 import android.util.Pair;
@@ -12,9 +12,6 @@ import com.dhenry.lendingclubscraper.app.R;
 
 import java.util.ArrayList;
 
-/**
- * Author: Dave
- */
 public class KeyValueAdapter extends BaseAdapter {
 
     private Context mContext;

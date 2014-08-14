@@ -1,16 +1,10 @@
 # --table-start--
-dataClass=com.dhenry.lendingclubscraper.app.orm.model.AccountSummaryData
+dataClass=com.dhenry.lendingclubscraper.app.persistence.models.AccountSummaryData
 tableName=accountSummary
 # --table-fields-start--
 # --field-start--
 fieldName=userEmail
 id=true
-# --field-end--
-# --field-start--
-fieldName=netAnnualizedReturn
-# --field-end--
-# --field-start--
-fieldName=adjustedNetAnnualizedReturn
 # --field-end--
 # --field-start--
 fieldName=adjustedAccountValues
@@ -39,7 +33,7 @@ fieldName=totalPayments
 # --table-fields-end--
 # --table-end--
 # --table-start--
-dataClass=com.dhenry.lendingclubscraper.app.orm.model.UserData
+dataClass=com.dhenry.lendingclubscraper.app.persistence.models.UserData
 tableName=user
 # --table-fields-start--
 # --field-start--
@@ -48,6 +42,22 @@ id=true
 # --field-end--
 # --field-start--
 fieldName=password
+# --field-end--
+# --table-fields-end--
+# --table-end--
+# --table-start--
+dataClass=com.dhenry.lendingclubscraper.app.persistence.models.NARCalculationData
+tableName=narCalculation
+# --table-fields-start--
+# --field-start--
+fieldName=userEmail
+id=true
+# --field-end--
+# --field-start--
+fieldName=adjustedNetAnnualizedReturn
+# --field-end--
+# --field-start--
+fieldName=weightedAverageRate
 # --field-end--
 # --table-fields-end--
 # --table-end--

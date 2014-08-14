@@ -1,4 +1,4 @@
-package com.dhenry.lendingclubscraper.app.util;
+package com.dhenry.lendingclubscraper.app.utilities;
 
 import android.content.res.Resources;
 

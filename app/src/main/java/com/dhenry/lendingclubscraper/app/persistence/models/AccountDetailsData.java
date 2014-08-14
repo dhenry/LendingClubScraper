@@ -1,4 +1,4 @@
-package com.dhenry.lendingclubscraper.app.orm.model;
+package com.dhenry.lendingclubscraper.app.persistence.models;
 
 /**
  * Author: Dave

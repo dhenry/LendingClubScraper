@@ -1,4 +1,4 @@
-package com.dhenry.lendingclubscraper.app.consts;
+package com.dhenry.lendingclubscraper.app.constants;
 
 public class LendingClubConstants {
 

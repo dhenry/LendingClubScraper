@@ -1,10 +1,11 @@
-package com.dhenry.lendingclubscraper.app.loader;
+package com.dhenry.lendingclubscraper.app.tasks;
 
 import android.util.Log;
 import android.util.Pair;
 
-import com.dhenry.lendingclubscraper.app.orm.model.AccountDetailsData;
-import com.dhenry.lendingclubscraper.app.view.ScraperCallback;
+import com.dhenry.lendingclubscraper.app.connectors.LendingClubJSoupConnector;
+import com.dhenry.lendingclubscraper.app.persistence.models.AccountDetailsData;
+import com.dhenry.lendingclubscraper.app.views.RemoteTaskCallback;
 
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
@@ -16,20 +17,20 @@ import java.text.ParseException;
 /**
  * Author: Dave
  */
-public class AccountDetailScraperTask extends ScraperTask<Pair, Void, AccountDetailsData> {
+public class AccountDetailScraperTask extends RemoteTask<Pair, Void, AccountDetailsData> {
 
     public final static String LOG_TAG = AccountDetailScraperTask.class.getCanonicalName();
 
-    public AccountDetailScraperTask(ScraperCallback<AccountDetailsData> parent) {
-        super(new WeakReference<ScraperCallback<AccountDetailsData>>(parent));
+    public AccountDetailScraperTask(RemoteTaskCallback<AccountDetailsData> parent) {
+        super(new WeakReference<RemoteTaskCallback<AccountDetailsData>>(parent));
     }
 
     @Override
-    protected ScraperResult<AccountDetailsData> doInBackground(Pair... credentials) {
+    protected RemoteTaskResult<AccountDetailsData> doInBackground(Pair... credentials) {
         try {
             LendingClubJSoupConnector connector = new LendingClubJSoupConnector();
 
-            Document doc = connector.viewAccountDetails(credentials[0].first.toString(), credentials[0].second.toString());
+            Document doc = connector.getAccountDetailsDocument(credentials[0].first.toString(), credentials[0].second.toString());
 
             Elements detailsTableRows = doc.select("#account-details2").select(".smallModule2Adj").select("td");
 
@@ -44,14 +45,14 @@ public class AccountDetailScraperTask extends ScraperTask<Pair, Void, AccountDet
             AccountDetailsData accountDetailsData = new AccountDetailsData(weightedAvgRate, accruedInterest,
                     paymentsToDate, principal, interest, lateFeesReceived);
 
-            return new ScraperResult<AccountDetailsData>(accountDetailsData);
+            return new RemoteTaskResult<AccountDetailsData>(accountDetailsData);
 
         } catch (IOException ioException) {
             Log.e(LOG_TAG, "Caught IOException => " + ioException.getMessage());
-            return new ScraperResult<AccountDetailsData>(ioException);
+            return new RemoteTaskResult<AccountDetailsData>(ioException);
         } catch (ParseException parseException) {
             Log.e(LOG_TAG, "Caught ParseException => " + parseException.getMessage());
-            return new ScraperResult<AccountDetailsData>(parseException);
+            return new RemoteTaskResult<AccountDetailsData>(parseException);
         }
     }
 

@@ -39,6 +39,7 @@ public abstract class LendingClubConnector {
     protected static final String LOGIN_URI_SUFFIX = "account/login.action";
     protected static final String ACCOUNT_DETAIL_URI_SUFFIX = "account/lenderAccountDetail.action";
     protected static final String CALCULATE_NAR_URI_SUFFIX = "account/calculateNar.action";
+    protected static final String BROWSE_NOTES_URI_SUFFIX = "browse/browseNotesAj.action?";
 
     protected static List<Header> getHeaders() {
         List<Header> headers = new ArrayList<Header>();

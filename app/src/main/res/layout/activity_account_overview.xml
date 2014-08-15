@@ -17,15 +17,34 @@
         android:layout_gravity="bottom">
 
         <Button
-        android:id="@+id/account_details_button"
+            android:id="@+id/account_details_button"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/get_account_details"
+            android:background="@android:color/transparent"
+            android:layout_weight="1"
+            android:singleLine="true"
+            android:paddingRight="10dp"
+            android:paddingLeft="10dp"
+            android:minHeight="60dp" />
+
+    </TableRow>
+
+    <TableRow android:layout_height="wrap_content"
         android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/get_account_details"
-        android:background="@android:color/transparent"
-        android:layout_weight="1"
-        android:singleLine="true"
-        android:paddingRight="10dp"
-        android:minHeight="60dp" />
+        android:layout_gravity="bottom">
+
+        <Button
+            android:id="@+id/browse_notes_button"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/browse_notes"
+            android:background="@android:color/transparent"
+            android:layout_weight="1"
+            android:singleLine="true"
+            android:paddingRight="10dp"
+            android:paddingLeft="10dp"
+            android:minHeight="60dp" />
 
     </TableRow>
 

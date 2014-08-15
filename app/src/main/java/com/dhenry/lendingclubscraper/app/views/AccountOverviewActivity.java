@@ -27,6 +27,7 @@ public class AccountOverviewActivity extends OrmLiteBaseListActivity<DatabaseHel
     private KeyValueAdapter adapter;
 
     private Button accountDetailsButton;
+    private Button browseNotesButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,6 +36,7 @@ public class AccountOverviewActivity extends OrmLiteBaseListActivity<DatabaseHel
         setContentView(R.layout.activity_account_overview);
 
         accountDetailsButton = (Button)findViewById(R.id.account_details_button);
+        browseNotesButton = (Button)findViewById(R.id.browse_notes_button);
 
         adapter = new KeyValueAdapter(this);
         setListAdapter(adapter);
@@ -49,6 +51,15 @@ public class AccountOverviewActivity extends OrmLiteBaseListActivity<DatabaseHel
                 Intent accountDetailsIntent = new Intent(AccountOverviewActivity.this, AccountDetailsActivity.class);
                 accountDetailsIntent.putExtra(LendingClubConstants.CURRENT_USER, currentUser);
                 startActivity(accountDetailsIntent);
+            }
+        });
+
+        browseNotesButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent browseNotesIntent = new Intent(AccountOverviewActivity.this, BrowseNotesActivity.class);
+                browseNotesIntent.putExtra(LendingClubConstants.CURRENT_USER, currentUser);
+                startActivity(browseNotesIntent);
             }
         });
     }

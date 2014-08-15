@@ -9,5 +9,6 @@
     <string name="get_account_details">More Details ...</string>
     <string name="loading">Loading...</string>
     <string name="rememberUser">Remember me?</string>
+    <string name="browse_notes">Browse Notes...</string>
 
 </resources>

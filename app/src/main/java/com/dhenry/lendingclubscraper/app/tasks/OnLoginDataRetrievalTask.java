@@ -8,6 +8,7 @@ import com.dhenry.lendingclubscraper.app.connectors.LendingClubRESTConnector;
 import com.dhenry.lendingclubscraper.app.exceptions.LendingClubException;
 import com.dhenry.lendingclubscraper.app.persistence.models.AccountSummaryData;
 import com.dhenry.lendingclubscraper.app.persistence.models.NARCalculationData;
+import com.dhenry.lendingclubscraper.app.persistence.models.NoteData;
 import com.dhenry.lendingclubscraper.app.views.RemoteTaskCallback;
 
 import org.json.JSONException;
@@ -18,6 +19,7 @@ import org.jsoup.select.Elements;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.text.ParseException;
+import java.util.List;
 
 public class OnLoginDataRetrievalTask extends RemoteTask<Pair, Void, Pair<AccountSummaryData, NARCalculationData>> {
 
@@ -31,8 +33,10 @@ public class OnLoginDataRetrievalTask extends RemoteTask<Pair, Void, Pair<Accoun
     protected RemoteTaskResult<Pair<AccountSummaryData, NARCalculationData>> doInBackground(Pair... credentials) {
 
         try {
+            List<NoteData> availableNotes = getAvailableNotes(0, 25);
             AccountSummaryData accountSummaryData = scrapeAccountSummaryData(credentials[0].first.toString(), credentials[0].second.toString());
             NARCalculationData narCalculationData = getNarCalculationData(credentials[0].first.toString(), credentials[0].second.toString());
+
 
             return new RemoteTaskResult<Pair<AccountSummaryData, NARCalculationData>>(
                     new Pair<AccountSummaryData, NARCalculationData>(accountSummaryData, narCalculationData));
@@ -40,6 +44,17 @@ public class OnLoginDataRetrievalTask extends RemoteTask<Pair, Void, Pair<Accoun
         } catch (LendingClubException lendingClubException) {
             Log.e(LOG_TAG, "Caught lendingClubException => " + lendingClubException.getMessage());
             return new RemoteTaskResult<Pair<AccountSummaryData, NARCalculationData>>(lendingClubException);
+        }
+    }
+
+    private List<NoteData> getAvailableNotes(Integer startIndex, Integer resultsPerPage) throws LendingClubException {
+        try {
+            LendingClubRESTConnector restConnector = new LendingClubRESTConnector();
+            return restConnector.viewPaginatedAvailableNotes(startIndex, resultsPerPage);
+        } catch (IOException e) {
+            throw new LendingClubException(e);
+        } catch (JSONException e) {
+            throw new LendingClubException(e);
         }
     }
 

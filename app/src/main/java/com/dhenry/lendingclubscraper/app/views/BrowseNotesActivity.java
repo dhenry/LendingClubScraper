@@ -7,6 +7,7 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 import com.dhenry.lendingclubscraper.app.R;
+import com.dhenry.lendingclubscraper.app.adapters.NoteAdapter;
 import com.dhenry.lendingclubscraper.app.persistence.DatabaseHelper;
 import com.dhenry.lendingclubscraper.app.persistence.models.NoteData;
 import com.dhenry.lendingclubscraper.app.tasks.NotesPaginatedDataRetrievalTask;
@@ -18,7 +19,7 @@ import java.util.List;
 
 public class BrowseNotesActivity extends OrmLiteBaseListActivity<DatabaseHelper> implements RemoteTaskCallback<List<NoteData>> {
 
-    private KeyValueAdapter adapter;
+    private NoteAdapter adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,7 +27,7 @@ public class BrowseNotesActivity extends OrmLiteBaseListActivity<DatabaseHelper>
 
         setContentView(R.layout.activity_browse_notes);
 
-        adapter = new KeyValueAdapter(this);
+        adapter = new NoteAdapter(this);
         setListAdapter(adapter);
 
         //retrieve the first 25 notes
@@ -50,11 +51,9 @@ public class BrowseNotesActivity extends OrmLiteBaseListActivity<DatabaseHelper>
 
     @Override
     public void onTaskSuccess(List<NoteData> result) {
-        NumberFormat percentFormat = NumberFormats.PERCENT_FORMAT;
-        NumberFormat currencyFormat = NumberFormats.CURRENCY_FORMAT;
 
         for (NoteData noteData : result) {
-            adapter.add(new Pair<String, String>(noteData.getTitle(), currencyFormat.format(noteData.getLoanAmountRequested())));
+            adapter.add(noteData);
         }
     }
 }

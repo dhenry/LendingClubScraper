@@ -10,5 +10,8 @@
     <string name="loading">Loading...</string>
     <string name="rememberUser">Remember me?</string>
     <string name="browse_notes">Browse Notes...</string>
+    <string name="minus">-</string>
+    <string name="plus">+</string>
+    <string name="reviewOrder">Review Order</string>
 
 </resources>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="gradeA">#ff0a24a1</color>
+    <color name="gradeB">#ff2582d6</color>
+    <color name="gradeC">#ff12831f</color>
+    <color name="gradeD">#ff12ba20</color>
+    <color name="gradeE">#ffe1e829</color>
+    <color name="gradeF">#ffc68b11</color>
+    <color name="gradeG">#ffde630f</color>
+
+</resources>

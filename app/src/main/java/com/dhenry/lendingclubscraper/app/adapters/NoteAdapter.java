@@ -142,6 +142,6 @@ public class NoteAdapter extends BaseAdapter {
 
     public void removeAllViews() {
         list.clear();
-        this.notifyDataSetChanged();
+        notifyDataSetChanged();
     }
 }

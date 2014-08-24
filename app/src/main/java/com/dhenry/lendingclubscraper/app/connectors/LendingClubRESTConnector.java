@@ -5,6 +5,7 @@ import android.util.Pair;
 import com.dhenry.lendingclubscraper.app.exceptions.LendingClubException;
 import com.dhenry.lendingclubscraper.app.persistence.models.NARCalculationData;
 import com.dhenry.lendingclubscraper.app.persistence.models.NoteData;
+import com.dhenry.lendingclubscraper.app.persistence.models.NotesPagedResult;
 
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
@@ -68,7 +69,7 @@ public class LendingClubRESTConnector extends LendingClubConnector {
         throw new LendingClubException("OMG no data");
     }
 
-    public List<NoteData> viewPaginatedAvailableNotes(int startIndex, int pagesize)
+    public NotesPagedResult viewPaginatedAvailableNotes(int startIndex, int pagesize)
                                                                 throws IOException, JSONException, LendingClubException {
 
         List<NameValuePair> requestBody = new ArrayList<NameValuePair>();
@@ -87,10 +88,15 @@ public class LendingClubRESTConnector extends LendingClubConnector {
             StringBuilder responseBody = getResponseBody(response.first.getEntity());
 
             JSONObject jsonObject = new JSONObject(responseBody.toString());
+            JSONObject searchResult = jsonObject.getJSONObject("searchresult");
 
-            JSONArray notesJSONArray = jsonObject.getJSONObject("searchresult").getJSONArray("loans");
+            JSONArray notesJSONArray = searchResult.getJSONArray("loans");
 
-            return Arrays.asList(new ObjectMapper().readValue(notesJSONArray.toString(), NoteData[].class));
+            List<NoteData> notes = Arrays.asList(new ObjectMapper().readValue(notesJSONArray.toString(), NoteData[].class));
+
+            int totalRecords = searchResult.getInt("totalRecords");
+
+            return new NotesPagedResult(notes, totalRecords);
         }
 
         throw new LendingClubException("OMG no data");

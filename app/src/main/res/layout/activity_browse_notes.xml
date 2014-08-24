@@ -27,6 +27,28 @@
     </LinearLayout>
 
     <TableRow android:layout_height="wrap_content"
+        android:layout_width="fill_parent"
+        android:layout_gravity="bottom">
+
+            <Button
+                android:id="@+id/prev"
+                android:text="Prev"
+                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                />
+
+            <Button
+                android:id="@+id/next"
+                android:text="Next"
+                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                />
+
+    </TableRow>
+
+    <TableRow android:layout_height="wrap_content"
     android:layout_width="fill_parent"
     android:layout_gravity="bottom">
 

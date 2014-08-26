@@ -1,20 +1,23 @@
 package com.dhenry.lendingclubscraper.app.adapters;
 
 import android.content.Context;
-import android.graphics.Color;
 import android.graphics.ColorFilter;
 import android.graphics.LightingColorFilter;
-import android.graphics.drawable.Drawable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.dhenry.lendingclubscraper.app.R;
+import com.dhenry.lendingclubscraper.app.constants.LendingClubConstants;
 import com.dhenry.lendingclubscraper.app.persistence.models.NoteData;
+import com.dhenry.lendingclubscraper.app.utilities.NoteOrderer;
 import com.dhenry.lendingclubscraper.app.utilities.NumberFormats;
+
+import org.w3c.dom.Text;
 
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
@@ -23,6 +26,7 @@ import java.util.ArrayList;
 public class NoteAdapter extends BaseAdapter {
 
     private Context mContext;
+    private NoteOrderer noteOrderer;
     private static LayoutInflater inflater = null;
     private ArrayList<NoteData> list = new ArrayList<NoteData>();
 
@@ -34,8 +38,9 @@ public class NoteAdapter extends BaseAdapter {
         percentFormat.setMultiplier(1);
     }
 
-    public NoteAdapter(Context context) {
+    public NoteAdapter(Context context, NoteOrderer notePurchaser) {
         this.mContext = context;
+        this.noteOrderer = notePurchaser;
         inflater = LayoutInflater.from(mContext);
     }
 
@@ -59,8 +64,9 @@ public class NoteAdapter extends BaseAdapter {
 
         View newView = convertView;
         ViewHolder holder;
+        final int listPosition = position;
 
-        NoteData currentNote = list.get(position);
+        final NoteData currentNote = list.get(listPosition);
 
         if (null == convertView) {
             holder = new ViewHolder();
@@ -71,6 +77,9 @@ public class NoteAdapter extends BaseAdapter {
             holder.title = (TextView) newView.findViewById(R.id.title);
             holder.amountFunded = (TextView) newView.findViewById(R.id.amountFunded);
             holder.percentageFunded = (ProgressBar) newView.findViewById(R.id.percentageFunded);
+            holder.purchaseLessButton = (Button) newView.findViewById(R.id.subtract25);
+            holder.purchaseMoreButton = (Button) newView.findViewById(R.id.add25);
+            holder.purchaseAmount = (TextView) newView.findViewById(R.id.purchaseAmount);
             newView.setTag(holder);
 
         } else {
@@ -95,12 +104,39 @@ public class NoteAdapter extends BaseAdapter {
 
         holder.percentageFunded.setProgress(getPercentFunded(currentNote).intValue());
 
+        holder.purchaseMoreButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                list.set(listPosition, noteOrderer.investIn(currentNote, LendingClubConstants.TWENTY_FIVE_DOLLARS));
+                notifyDataSetChanged();
+            }
+        });
+
+        holder.purchaseLessButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                list.set(listPosition, noteOrderer.investIn(currentNote, -LendingClubConstants.TWENTY_FIVE_DOLLARS));
+                notifyDataSetChanged();
+            }
+        });
+
+        holder.purchaseAmount.setText(currencyFormat.format(currentNote.getAmountToInvest()));
+
+        togglePurchaseButtons(currentNote, holder);
+
         return newView;
     }
 
-    private int getLoanGradeColor(String loanGrade) {
-        loanGrade.charAt(0);
+    private void togglePurchaseButtons(NoteData noteData, ViewHolder holder)
+    {
+        if (noteData.getAmountToInvest().equals(0)) {
+            holder.purchaseLessButton.setEnabled(false);
+        } else {
+            holder.purchaseLessButton.setEnabled(true);
+        }
+    }
 
+    private int getLoanGradeColor(String loanGrade) {
         switch (loanGrade.charAt(0)) {
             case 'A':
                 return mContext.getResources().getColor(R.color.gradeA);
@@ -133,6 +169,9 @@ public class NoteAdapter extends BaseAdapter {
         TextView title;
         TextView amountFunded;
         ProgressBar percentageFunded;
+        Button purchaseMoreButton;
+        Button purchaseLessButton;
+        TextView purchaseAmount;
     }
 
     public void add(NoteData listItem) {

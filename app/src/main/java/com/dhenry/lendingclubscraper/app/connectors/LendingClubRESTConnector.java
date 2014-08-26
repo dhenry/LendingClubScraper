@@ -96,7 +96,7 @@ public class LendingClubRESTConnector extends LendingClubConnector {
 
             int totalRecords = searchResult.getInt("totalRecords");
 
-            return new NotesPagedResult(notes, totalRecords);
+            return new NotesPagedResult(notes, totalRecords, startIndex, startIndex + pagesize);
         }
 
         throw new LendingClubException("OMG no data");

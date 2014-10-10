@@ -9,17 +9,22 @@ import android.widget.Toast;
 
 import com.dhenry.lendingclubscraper.app.R;
 import com.dhenry.lendingclubscraper.app.adapters.NoteAdapter;
+import com.dhenry.lendingclubscraper.app.constants.LendingClubConstants;
 import com.dhenry.lendingclubscraper.app.persistence.DatabaseHelper;
+import com.dhenry.lendingclubscraper.app.persistence.models.CheckInOrderResult;
 import com.dhenry.lendingclubscraper.app.persistence.models.NoteData;
 import com.dhenry.lendingclubscraper.app.persistence.models.NotesPagedResult;
+import com.dhenry.lendingclubscraper.app.persistence.models.UserData;
+import com.dhenry.lendingclubscraper.app.tasks.AddNotesToOrderTask;
 import com.dhenry.lendingclubscraper.app.tasks.NotesPaginatedDataRetrievalTask;
 import com.dhenry.lendingclubscraper.app.utilities.NoteOrderer;
 import com.j256.ormlite.android.apptools.OrmLiteBaseListActivity;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-public class BrowseNotesActivity extends OrmLiteBaseListActivity<DatabaseHelper> implements RemoteTaskCallback<NotesPagedResult>, NoteOrderer {
+public class BrowseNotesActivity extends OrmLiteBaseListActivity<DatabaseHelper> implements NoteOrderer {
 
     private Button prevButton;
     private Button nextButton;
@@ -35,6 +40,9 @@ public class BrowseNotesActivity extends OrmLiteBaseListActivity<DatabaseHelper>
 
     public static final int NUM_ITEMS_PAGE = 25;
     public Integer totalListItems;
+
+    private CheckInOrderHandler checkInOrderHandler = new CheckInOrderHandler();
+    private RetrieveNotesHandler retrieveNotesHandler = new RetrieveNotesHandler();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,6 +60,8 @@ public class BrowseNotesActivity extends OrmLiteBaseListActivity<DatabaseHelper>
 
         //retrieve the first 25 notes
         loadList(0);
+
+        final UserData currentUser = getIntent().getParcelableExtra(LendingClubConstants.CURRENT_USER);
 
         nextButton.setOnClickListener(new View.OnClickListener() {
 
@@ -76,8 +86,45 @@ public class BrowseNotesActivity extends OrmLiteBaseListActivity<DatabaseHelper>
             @Override
             public void onClick(View v) {
                 Toast.makeText(BrowseNotesActivity.this, "Investing in " + notesToInvestIn.size() + " notes.", Toast.LENGTH_LONG).show();
+
+                new AddNotesToOrderTask(checkInOrderHandler, currentUser).execute(notesToInvestIn.values());
             }
         });
+    }
+
+    private class CheckInOrderHandler implements RemoteTaskCallback<CheckInOrderResult> {
+
+        @Override
+        public void onTaskError(Exception exception) {
+            Toast.makeText(BrowseNotesActivity.this, "Check in order failed: " + exception.getMessage(), Toast.LENGTH_LONG).show();
+        }
+
+        @Override
+        public void onTaskSuccess(CheckInOrderResult result) {
+            Toast.makeText(BrowseNotesActivity.this, result.getMessage(), Toast.LENGTH_LONG).show();
+
+            // TODO: go to order review screen
+        }
+    }
+
+    private class RetrieveNotesHandler implements RemoteTaskCallback<NotesPagedResult> {
+
+        @Override
+        public void onTaskError(Exception exception) {
+            Toast.makeText(BrowseNotesActivity.this, "Note Retrieval Failed: " + exception.getMessage(), Toast.LENGTH_LONG).show();
+        }
+
+        @Override
+        public void onTaskSuccess(NotesPagedResult result) {
+
+            cachedResults.put(result.getStartIndex(), result);
+
+            totalListItems = result.getTotalRecords();
+
+            setPageCount();
+
+            displayResultsPage(result);
+        }
     }
 
     @Override
@@ -108,34 +155,16 @@ public class BrowseNotesActivity extends OrmLiteBaseListActivity<DatabaseHelper>
 
     private void loadList(int number)
     {
-        //title.setText("Page "+(number+1)+" of "+pageCount);
-
         int start = number * NUM_ITEMS_PAGE;
 
         // retrieve the result from the local cache or remotely
         if (cachedResults.get(start) == null) {
-            new NotesPaginatedDataRetrievalTask(BrowseNotesActivity.this).execute(start, NUM_ITEMS_PAGE);
+            new NotesPaginatedDataRetrievalTask(retrieveNotesHandler).execute(start, NUM_ITEMS_PAGE);
         } else {
             displayResultsPage(cachedResults.get(start));
         }
     }
 
-    @Override
-    public void onTaskError(Exception exception) {
-        Toast.makeText(BrowseNotesActivity.this, "Note Retrieval Failed: " + exception.getMessage(), Toast.LENGTH_LONG).show();
-    }
-
-    @Override
-    public void onTaskSuccess(NotesPagedResult result) {
-
-        cachedResults.put(result.getStartIndex(), result);
-
-        totalListItems = result.getTotalRecords();
-
-        setPageCount();
-
-        displayResultsPage(result);
-    }
 
     private void setPageCount() {
         if (pageCount == null) {

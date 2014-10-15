@@ -1,24 +1,19 @@
 package com.dhenry.lendingclubscraper.app.volley;
 
 import android.content.Context;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
 
-import com.android.volley.Network;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
-import com.android.volley.toolbox.BasicNetwork;
-import com.android.volley.toolbox.DiskBasedCache;
 import com.android.volley.toolbox.HttpClientStack;
+import com.android.volley.toolbox.Volley;
 
+import org.apache.http.conn.ClientConnectionManager;
 import org.apache.http.impl.client.DefaultHttpClient;
-
-import java.io.File;
+import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
+import org.apache.http.params.HttpParams;
 
 public class VolleyRequestManager {
 
-    private static final int SINGLE_THREAD_THREAD_POOL_SIZE = 1;
-    private static final String DEFAULT_CACHE_DIR = "volley";
     private static VolleyRequestManager mInstance;
     private RequestQueue mRequestQueue;
     private static Context mCtx;
@@ -38,24 +33,26 @@ public class VolleyRequestManager {
     public RequestQueue getRequestQueue() {
         if (mRequestQueue == null) {
 
-            String userAgent = "volley/0";
-            try {
-                String packageName = mCtx.getPackageName();
-                PackageInfo info = mCtx.getPackageManager().getPackageInfo(packageName, 0);
-                userAgent = packageName + "/" + info.versionCode;
-            } catch (PackageManager.NameNotFoundException e) {
-            }
-
-            Network network = new BasicNetwork(new HttpClientStack(new DefaultHttpClient()));
-
-            File cacheDir = new File(mCtx.getCacheDir(), DEFAULT_CACHE_DIR);
-
-            mRequestQueue = new RequestQueue(new DiskBasedCache(cacheDir), network, SINGLE_THREAD_THREAD_POOL_SIZE);
+            mRequestQueue = Volley.newRequestQueue(mCtx, new HttpClientStack(getThreadSafeClient()));
 
             mRequestQueue.start();
 
         }
         return mRequestQueue;
+    }
+
+    private static DefaultHttpClient getThreadSafeClient() {
+
+        DefaultHttpClient client = new DefaultHttpClient();
+
+        ClientConnectionManager mgr = client.getConnectionManager();
+
+        HttpParams params = client.getParams();
+
+        client = new DefaultHttpClient(new ThreadSafeClientConnManager(params, mgr.getSchemeRegistry()), params);
+
+        return client;
+
     }
 
     public <T> void addToRequestQueue(Request<T> req) {

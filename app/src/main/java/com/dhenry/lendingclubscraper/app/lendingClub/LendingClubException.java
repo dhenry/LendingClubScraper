@@ -1,4 +1,4 @@
-package com.dhenry.lendingclubscraper.app.exceptions;
+package com.dhenry.lendingclubscraper.app.lendingClub;
 
 public class LendingClubException extends Exception {
 

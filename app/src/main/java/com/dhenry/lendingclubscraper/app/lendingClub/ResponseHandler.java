@@ -1,6 +1,6 @@
-package com.dhenry.lendingclubscraper.app.views;
+package com.dhenry.lendingclubscraper.app.lendingClub;
 
-public interface RemoteTaskCallback<ResultType> {
+public interface ResponseHandler<ResultType> {
 
     public void onTaskError(Exception exception);
 

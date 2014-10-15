@@ -1,5 +1,6 @@
 package com.dhenry.lendingclubscraper.app.views;
 
+import android.app.ListActivity;
 import android.os.Bundle;
 import android.util.SparseArray;
 import android.view.View;
@@ -8,23 +9,21 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 import com.dhenry.lendingclubscraper.app.R;
-import com.dhenry.lendingclubscraper.app.adapters.NoteAdapter;
 import com.dhenry.lendingclubscraper.app.constants.LendingClubConstants;
-import com.dhenry.lendingclubscraper.app.persistence.DatabaseHelper;
+import com.dhenry.lendingclubscraper.app.lendingClub.LendingClubAPI;
+import com.dhenry.lendingclubscraper.app.lendingClub.ResponseHandler;
+import com.dhenry.lendingclubscraper.app.lendingClub.impl.LendingClubAPIClient;
 import com.dhenry.lendingclubscraper.app.persistence.models.CheckInOrderResult;
 import com.dhenry.lendingclubscraper.app.persistence.models.NoteData;
 import com.dhenry.lendingclubscraper.app.persistence.models.NotesPagedResult;
 import com.dhenry.lendingclubscraper.app.persistence.models.UserData;
-import com.dhenry.lendingclubscraper.app.tasks.AddNotesToOrderTask;
-import com.dhenry.lendingclubscraper.app.tasks.NotesPaginatedDataRetrievalTask;
 import com.dhenry.lendingclubscraper.app.utilities.NoteOrderer;
-import com.j256.ormlite.android.apptools.OrmLiteBaseListActivity;
+import com.dhenry.lendingclubscraper.app.views.adapters.NoteAdapter;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-public class BrowseNotesActivity extends OrmLiteBaseListActivity<DatabaseHelper> implements NoteOrderer {
+public class BrowseNotesActivity extends ListActivity implements NoteOrderer {
 
     private Button prevButton;
     private Button nextButton;
@@ -42,11 +41,14 @@ public class BrowseNotesActivity extends OrmLiteBaseListActivity<DatabaseHelper>
     public Integer totalListItems;
 
     private CheckInOrderHandler checkInOrderHandler = new CheckInOrderHandler();
-    private RetrieveNotesHandler retrieveNotesHandler = new RetrieveNotesHandler();
+
+    private LendingClubAPI lendingClubAPI;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        lendingClubAPI = new LendingClubAPIClient(this);
 
         setContentView(R.layout.activity_browse_notes);
         nextButton = (Button)findViewById(R.id.next);
@@ -87,12 +89,12 @@ public class BrowseNotesActivity extends OrmLiteBaseListActivity<DatabaseHelper>
             public void onClick(View v) {
                 Toast.makeText(BrowseNotesActivity.this, "Investing in " + notesToInvestIn.size() + " notes.", Toast.LENGTH_LONG).show();
 
-                new AddNotesToOrderTask(checkInOrderHandler, currentUser).execute(notesToInvestIn.values());
+                lendingClubAPI.addNotesToOrder(currentUser, notesToInvestIn.values(), checkInOrderHandler);
             }
         });
     }
 
-    private class CheckInOrderHandler implements RemoteTaskCallback<CheckInOrderResult> {
+    private class CheckInOrderHandler implements ResponseHandler<CheckInOrderResult> {
 
         @Override
         public void onTaskError(Exception exception) {
@@ -107,7 +109,7 @@ public class BrowseNotesActivity extends OrmLiteBaseListActivity<DatabaseHelper>
         }
     }
 
-    private class RetrieveNotesHandler implements RemoteTaskCallback<NotesPagedResult> {
+    private class RetrieveNotesHandler implements ResponseHandler<NotesPagedResult> {
 
         @Override
         public void onTaskError(Exception exception) {
@@ -159,7 +161,8 @@ public class BrowseNotesActivity extends OrmLiteBaseListActivity<DatabaseHelper>
 
         // retrieve the result from the local cache or remotely
         if (cachedResults.get(start) == null) {
-            new NotesPaginatedDataRetrievalTask(retrieveNotesHandler).execute(start, NUM_ITEMS_PAGE);
+
+            lendingClubAPI.getAvailableNotes(start, NUM_ITEMS_PAGE, new RetrieveNotesHandler());
         } else {
             displayResultsPage(cachedResults.get(start));
         }

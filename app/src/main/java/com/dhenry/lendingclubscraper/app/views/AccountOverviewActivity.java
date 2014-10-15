@@ -1,33 +1,38 @@
 package com.dhenry.lendingclubscraper.app.views;
 
+import android.app.ListActivity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Pair;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ListView;
 import android.widget.Toast;
 
 import com.dhenry.lendingclubscraper.app.R;
 import com.dhenry.lendingclubscraper.app.constants.LendingClubConstants;
-import com.dhenry.lendingclubscraper.app.persistence.DatabaseHelper;
+import com.dhenry.lendingclubscraper.app.lendingClub.LendingClubAPI;
+import com.dhenry.lendingclubscraper.app.lendingClub.ResponseHandler;
+import com.dhenry.lendingclubscraper.app.lendingClub.impl.LendingClubAPIClient;
 import com.dhenry.lendingclubscraper.app.persistence.models.AccountSummaryData;
 import com.dhenry.lendingclubscraper.app.persistence.models.NARCalculationData;
 import com.dhenry.lendingclubscraper.app.persistence.models.UserData;
 import com.dhenry.lendingclubscraper.app.utilities.NumberFormats;
-import com.j256.ormlite.android.apptools.OrmLiteBaseListActivity;
-import com.j256.ormlite.dao.RuntimeExceptionDao;
+import com.dhenry.lendingclubscraper.app.views.adapters.KeyValueAdapter;
 
 import java.text.NumberFormat;
 
 /**
  * Author: Dave
  */
-public class AccountOverviewActivity extends OrmLiteBaseListActivity<DatabaseHelper> {
+public class AccountOverviewActivity extends ListActivity {
 
     private KeyValueAdapter adapter;
 
     private Button accountDetailsButton;
     private Button browseNotesButton;
+
+    private LendingClubAPI lendingClubAPI;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,7 +48,10 @@ public class AccountOverviewActivity extends OrmLiteBaseListActivity<DatabaseHel
 
         final UserData currentUser = getIntent().getParcelableExtra(LendingClubConstants.CURRENT_USER);
 
-        populateAccountSummaryList(currentUser);
+        lendingClubAPI = new LendingClubAPIClient(this);
+
+        lendingClubAPI.getAccountSummary(currentUser, new AccountSummaryResponseHandler());
+        lendingClubAPI.getNetAnnualizedReturnData(currentUser, new NetAnnualizedReturnHandler());
 
         accountDetailsButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -64,47 +72,64 @@ public class AccountOverviewActivity extends OrmLiteBaseListActivity<DatabaseHel
         });
     }
 
-    /**
-     * Grab the AccountSummaryData associated with the currently logged in user and render a list row
-     * for each data point.
-     *
-     * @param currentUser the currently logged in user
-     */
-    private void populateAccountSummaryList(final UserData currentUser) {
+    private class NetAnnualizedReturnHandler implements ResponseHandler<NARCalculationData> {
 
-        RuntimeExceptionDao<AccountSummaryData, String> accountSummaryDataDAO = getHelper().getRuntimeExceptionDao(AccountSummaryData.class);
-        RuntimeExceptionDao<NARCalculationData, String> NARCalculationDataDAO = getHelper().getRuntimeExceptionDao(NARCalculationData.class);
-
-        AccountSummaryData accountSummaryData = accountSummaryDataDAO.queryForId(currentUser.getUserEmail());
-        NARCalculationData NARCalculationData = NARCalculationDataDAO.queryForId(currentUser.getUserEmail());
-
-        if (accountSummaryData == null) {
-            Toast.makeText(this, "No Account Summary Information available to display..", Toast.LENGTH_LONG).show();
-            return;
+        @Override
+        public void onTaskError(Exception exception) {
+            Toast.makeText(AccountOverviewActivity.this,"Net annualized return retrieval failed: "
+                    + exception.getMessage(), Toast.LENGTH_LONG).show();
         }
 
-        NumberFormat percentFormat = NumberFormats.PERCENT_FORMAT;
-        NumberFormat currencyFormat = NumberFormats.CURRENCY_FORMAT;
+        @Override
+        public void onTaskSuccess(NARCalculationData result) {
 
-        adapter.add(new Pair<String, String>("Adjusted Net Annualized Return",
-                percentFormat.format(NARCalculationData.getAdjustedNetAnnualizedReturn())));
-        adapter.add(new Pair<String, String>("Weighted Average Rate",
-                percentFormat.format(NARCalculationData.getWeightedAverageRate())));
-        adapter.add(new Pair<String, String>("Total Payments",
-                currencyFormat.format(accountSummaryData.getTotalPayments())));
-        adapter.add(new Pair<String, String>("Account Value",
-                currencyFormat.format(accountSummaryData.getAccountValue())));
-        adapter.add(new Pair<String, String>("Outstanding Principle",
-                currencyFormat.format(accountSummaryData.getOutstandingPrinciple())));
-        adapter.add(new Pair<String, String>("Available Cash",
-                currencyFormat.format(accountSummaryData.getAvailableCash())));
-        adapter.add(new Pair<String, String>("In Funding Notes",
-                currencyFormat.format(accountSummaryData.getInFundingNotes())));
-        adapter.add(new Pair<String, String>("Adjusted Account Value",
-                currencyFormat.format(accountSummaryData.getAdjustedAccountValues())));
-        adapter.add(new Pair<String, String>("Interest Received",
-                currencyFormat.format(accountSummaryData.getInterestReceived())));
-        adapter.add(new Pair<String, String>("Adjustment for Past-Due Notes",
-                currencyFormat.format(accountSummaryData.getPastDueNotesAdjustment())));
+            NumberFormat percentFormat = NumberFormats.PERCENT_FORMAT;
+
+            adapter.add(new Pair<String, String>("Adjusted Net Annualized Return",
+                    percentFormat.format(result.getAdjustedNetAnnualizedReturn())));
+            adapter.add(new Pair<String, String>("Weighted Average Rate",
+                    percentFormat.format(result.getWeightedAverageRate())));
+        }
+    }
+
+    private class AccountSummaryResponseHandler implements ResponseHandler<AccountSummaryData> {
+
+        @Override
+        public void onTaskError(Exception exception) {
+            Toast.makeText(AccountOverviewActivity.this,"Account summary retrieval failed: "
+                    + exception.getMessage(), Toast.LENGTH_LONG).show();
+        }
+
+        @Override
+        public void onTaskSuccess(AccountSummaryData accountSummaryData) {
+
+            NumberFormat currencyFormat = NumberFormats.CURRENCY_FORMAT;
+
+            adapter.add(new Pair<String, String>("Total Payments",
+                    currencyFormat.format(accountSummaryData.getTotalPayments())));
+            adapter.add(new Pair<String, String>("Account Value",
+                    currencyFormat.format(accountSummaryData.getAccountValue())));
+            adapter.add(new Pair<String, String>("Outstanding Principle",
+                    currencyFormat.format(accountSummaryData.getOutstandingPrinciple())));
+            adapter.add(new Pair<String, String>("Available Cash",
+                    currencyFormat.format(accountSummaryData.getAvailableCash())));
+            adapter.add(new Pair<String, String>("In Funding Notes",
+                    currencyFormat.format(accountSummaryData.getInFundingNotes())));
+            adapter.add(new Pair<String, String>("Adjusted Account Value",
+                    currencyFormat.format(accountSummaryData.getAdjustedAccountValues())));
+            adapter.add(new Pair<String, String>("Interest Received",
+                    currencyFormat.format(accountSummaryData.getInterestReceived())));
+            adapter.add(new Pair<String, String>("Adjustment for Past-Due Notes",
+                    currencyFormat.format(accountSummaryData.getPastDueNotesAdjustment())));
+        }
+    }
+
+    @Override
+    public void onContentChanged() {
+        super.onContentChanged();
+
+        View empty = findViewById(R.id.empty);
+        ListView list = (ListView) findViewById(android.R.id.list);
+        list.setEmptyView(empty);
     }
 }

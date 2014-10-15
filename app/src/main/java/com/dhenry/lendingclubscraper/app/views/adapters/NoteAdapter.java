@@ -1,4 +1,4 @@
-package com.dhenry.lendingclubscraper.app.adapters;
+package com.dhenry.lendingclubscraper.app.views.adapters;
 
 import android.content.Context;
 import android.graphics.ColorFilter;

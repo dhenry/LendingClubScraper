@@ -1,4 +1,4 @@
-package com.dhenry.lendingclubscraper.app.views;
+package com.dhenry.lendingclubscraper.app.views.adapters;
 
 import android.content.Context;
 import android.util.Pair;

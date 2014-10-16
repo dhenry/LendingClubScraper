@@ -21,6 +21,7 @@ import com.dhenry.lendingclubscraper.app.utilities.NumberFormats;
 import com.dhenry.lendingclubscraper.app.views.adapters.KeyValueAdapter;
 
 import java.text.NumberFormat;
+import java.util.ArrayList;
 
 /**
  * Author: Dave
@@ -31,8 +32,8 @@ public class AccountOverviewActivity extends ListActivity {
 
     private Button accountDetailsButton;
     private Button browseNotesButton;
-
-    private LendingClubAPI lendingClubAPI;
+    private NARCalculationData narCalculationData;
+    private AccountSummaryData accountSummaryData;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,10 +49,24 @@ public class AccountOverviewActivity extends ListActivity {
 
         final UserData currentUser = getIntent().getParcelableExtra(LendingClubConstants.CURRENT_USER);
 
-        lendingClubAPI = new LendingClubAPIClient(this);
+        LendingClubAPI lendingClubAPI = new LendingClubAPIClient(this);
 
-        lendingClubAPI.getAccountSummary(currentUser, new AccountSummaryResponseHandler());
-        lendingClubAPI.getNetAnnualizedReturnData(currentUser, new NetAnnualizedReturnHandler());
+        if (savedInstanceState != null) {
+            accountSummaryData = savedInstanceState.getParcelable(AccountSummaryData.class.getName());
+            narCalculationData = savedInstanceState.getParcelable(NARCalculationData.class.getName());
+        }
+
+        if (accountSummaryData != null) {
+            addAccountSummaryDataToAdapter(accountSummaryData);
+        } else {
+            lendingClubAPI.getAccountSummary(currentUser, new AccountSummaryResponseHandler());
+        }
+
+        if (narCalculationData != null) {
+            addNARCalculationDataToAdapter(narCalculationData);
+        } else {
+            lendingClubAPI.getNetAnnualizedReturnData(currentUser, new NetAnnualizedReturnHandler());
+        }
 
         accountDetailsButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -82,14 +97,18 @@ public class AccountOverviewActivity extends ListActivity {
 
         @Override
         public void onTaskSuccess(NARCalculationData result) {
-
-            NumberFormat percentFormat = NumberFormats.PERCENT_FORMAT;
-
-            adapter.add(new Pair<String, String>("Adjusted Net Annualized Return",
-                    percentFormat.format(result.getAdjustedNetAnnualizedReturn())));
-            adapter.add(new Pair<String, String>("Weighted Average Rate",
-                    percentFormat.format(result.getWeightedAverageRate())));
+            narCalculationData = result;
+            addNARCalculationDataToAdapter(result);
         }
+    }
+
+    private void addNARCalculationDataToAdapter(NARCalculationData narCalculationData) {
+        NumberFormat percentFormat = NumberFormats.PERCENT_FORMAT;
+
+        adapter.add(new Pair<String, String>("Adjusted Net Annualized Return",
+                percentFormat.format(narCalculationData.getAdjustedNetAnnualizedReturn())));
+        adapter.add(new Pair<String, String>("Weighted Average Rate",
+                percentFormat.format(narCalculationData.getWeightedAverageRate())));
     }
 
     private class AccountSummaryResponseHandler implements ResponseHandler<AccountSummaryData> {
@@ -101,27 +120,31 @@ public class AccountOverviewActivity extends ListActivity {
         }
 
         @Override
-        public void onTaskSuccess(AccountSummaryData accountSummaryData) {
-
-            NumberFormat currencyFormat = NumberFormats.CURRENCY_FORMAT;
-
-            adapter.add(new Pair<String, String>("Total Payments",
-                    currencyFormat.format(accountSummaryData.getTotalPayments())));
-            adapter.add(new Pair<String, String>("Account Value",
-                    currencyFormat.format(accountSummaryData.getAccountValue())));
-            adapter.add(new Pair<String, String>("Outstanding Principle",
-                    currencyFormat.format(accountSummaryData.getOutstandingPrinciple())));
-            adapter.add(new Pair<String, String>("Available Cash",
-                    currencyFormat.format(accountSummaryData.getAvailableCash())));
-            adapter.add(new Pair<String, String>("In Funding Notes",
-                    currencyFormat.format(accountSummaryData.getInFundingNotes())));
-            adapter.add(new Pair<String, String>("Adjusted Account Value",
-                    currencyFormat.format(accountSummaryData.getAdjustedAccountValues())));
-            adapter.add(new Pair<String, String>("Interest Received",
-                    currencyFormat.format(accountSummaryData.getInterestReceived())));
-            adapter.add(new Pair<String, String>("Adjustment for Past-Due Notes",
-                    currencyFormat.format(accountSummaryData.getPastDueNotesAdjustment())));
+        public void onTaskSuccess(AccountSummaryData result) {
+            accountSummaryData = result;
+            addAccountSummaryDataToAdapter(result);
         }
+    }
+
+    private void addAccountSummaryDataToAdapter(AccountSummaryData accountSummaryData) {
+        NumberFormat currencyFormat = NumberFormats.CURRENCY_FORMAT;
+
+        adapter.add(new Pair<String, String>("Total Payments",
+                currencyFormat.format(accountSummaryData.getTotalPayments())));
+        adapter.add(new Pair<String, String>("Account Value",
+                currencyFormat.format(accountSummaryData.getAccountValue())));
+        adapter.add(new Pair<String, String>("Outstanding Principle",
+                currencyFormat.format(accountSummaryData.getOutstandingPrinciple())));
+        adapter.add(new Pair<String, String>("Available Cash",
+                currencyFormat.format(accountSummaryData.getAvailableCash())));
+        adapter.add(new Pair<String, String>("In Funding Notes",
+                currencyFormat.format(accountSummaryData.getInFundingNotes())));
+        adapter.add(new Pair<String, String>("Adjusted Account Value",
+                currencyFormat.format(accountSummaryData.getAdjustedAccountValues())));
+        adapter.add(new Pair<String, String>("Interest Received",
+                currencyFormat.format(accountSummaryData.getInterestReceived())));
+        adapter.add(new Pair<String, String>("Adjustment for Past-Due Notes",
+                currencyFormat.format(accountSummaryData.getPastDueNotesAdjustment())));
     }
 
     @Override
@@ -131,5 +154,18 @@ public class AccountOverviewActivity extends ListActivity {
         View empty = findViewById(R.id.empty);
         ListView list = (ListView) findViewById(android.R.id.list);
         list.setEmptyView(empty);
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle savedInstanceState) {
+        super.onSaveInstanceState(savedInstanceState);
+
+        if (this.accountSummaryData != null) {
+            savedInstanceState.putParcelable(AccountSummaryData.class.getName(), accountSummaryData);
+        }
+
+        if (this.narCalculationData != null) {
+            savedInstanceState.putParcelable(NARCalculationData.class.getName(), narCalculationData);
+        }
     }
 }

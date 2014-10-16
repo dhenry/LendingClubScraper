@@ -121,6 +121,11 @@ public class LoginActivity extends OrmLiteBaseActivity<DatabaseHelper> {
             accountOverviewIntent.putExtra(LendingClubConstants.CURRENT_USER, userData);
             startActivity(accountOverviewIntent);
         }
+
+        @Override
+        public Boolean getResult() {
+            return null; // TODO
+        }
     }
 
     @Override

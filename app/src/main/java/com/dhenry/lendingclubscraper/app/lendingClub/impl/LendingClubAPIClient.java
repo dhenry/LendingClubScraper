@@ -251,6 +251,11 @@ public class LendingClubAPIClient implements LendingClubAPI {
                     checkInOrder(handler);
                 }
             }
+
+            @Override
+            public Boolean getResult() {
+                return null; // TODO
+            }
         };
 
         for (NoteData note : notes) {

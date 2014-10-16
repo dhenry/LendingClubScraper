@@ -107,6 +107,11 @@ public class BrowseNotesActivity extends ListActivity implements NoteOrderer {
 
             // TODO: go to order review screen
         }
+
+        @Override
+        public CheckInOrderResult getResult() {
+            return null; // TODO
+        }
     }
 
     private class RetrieveNotesHandler implements ResponseHandler<NotesPagedResult> {
@@ -126,6 +131,11 @@ public class BrowseNotesActivity extends ListActivity implements NoteOrderer {
             setPageCount();
 
             displayResultsPage(result);
+        }
+
+        @Override
+        public NotesPagedResult getResult() {
+            return null; // TODO
         }
     }
 

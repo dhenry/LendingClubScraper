@@ -73,6 +73,11 @@ public class AccountDetailsActivity extends ListActivity {
             adapter.add(new Pair<String, String>("Late Fees Received",
                     currencyFormat.format(accountDetailsData.getLateFeesReceived())));
         }
+
+        @Override
+        public AccountDetailsData getResult() {
+            return null; // TODO
+        }
     }
 
     @Override

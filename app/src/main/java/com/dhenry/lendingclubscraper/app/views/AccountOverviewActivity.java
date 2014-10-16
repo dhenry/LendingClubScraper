@@ -2,6 +2,7 @@ package com.dhenry.lendingclubscraper.app.views;
 
 import android.app.ListActivity;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Pair;
 import android.view.View;
@@ -19,21 +20,38 @@ import com.dhenry.lendingclubscraper.app.persistence.models.NARCalculationData;
 import com.dhenry.lendingclubscraper.app.persistence.models.UserData;
 import com.dhenry.lendingclubscraper.app.utilities.NumberFormats;
 import com.dhenry.lendingclubscraper.app.views.adapters.KeyValueAdapter;
+import com.github.mttkay.memento.Memento;
+import com.github.mttkay.memento.MementoCallbacks;
+import com.github.mttkay.memento.Retain;
 
 import java.text.NumberFormat;
-import java.util.ArrayList;
 
 /**
  * Author: Dave
  */
-public class AccountOverviewActivity extends ListActivity {
+public class AccountOverviewActivity extends ListActivity implements MementoCallbacks {
 
     private KeyValueAdapter adapter;
 
     private Button accountDetailsButton;
     private Button browseNotesButton;
-    private NARCalculationData narCalculationData;
-    private AccountSummaryData accountSummaryData;
+
+    @Retain AccountSummaryResponseHandler accountSummaryResponseHandler;
+    @Retain NetAnnualizedReturnHandler narCalculationResponseHandler;
+    @Retain UserData currentUser;
+
+    @Override
+    public void onLaunch() {
+        currentUser = getIntent().getParcelableExtra(LendingClubConstants.CURRENT_USER);
+
+        LendingClubAPI lendingClubAPI = new LendingClubAPIClient(this);
+
+        accountSummaryResponseHandler = new AccountSummaryResponseHandler();
+        narCalculationResponseHandler = new NetAnnualizedReturnHandler();
+
+        lendingClubAPI.getAccountSummary(currentUser, accountSummaryResponseHandler);
+        lendingClubAPI.getNetAnnualizedReturnData(currentUser, narCalculationResponseHandler);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,26 +65,10 @@ public class AccountOverviewActivity extends ListActivity {
         adapter = new KeyValueAdapter(this);
         setListAdapter(adapter);
 
-        final UserData currentUser = getIntent().getParcelableExtra(LendingClubConstants.CURRENT_USER);
+        Memento.retain(this);   // retrieve or cache reusable information
 
-        LendingClubAPI lendingClubAPI = new LendingClubAPIClient(this);
-
-        if (savedInstanceState != null) {
-            accountSummaryData = savedInstanceState.getParcelable(AccountSummaryData.class.getName());
-            narCalculationData = savedInstanceState.getParcelable(NARCalculationData.class.getName());
-        }
-
-        if (accountSummaryData != null) {
-            addAccountSummaryDataToAdapter(accountSummaryData);
-        } else {
-            lendingClubAPI.getAccountSummary(currentUser, new AccountSummaryResponseHandler());
-        }
-
-        if (narCalculationData != null) {
-            addNARCalculationDataToAdapter(narCalculationData);
-        } else {
-            lendingClubAPI.getNetAnnualizedReturnData(currentUser, new NetAnnualizedReturnHandler());
-        }
+        addAccountSummaryDataToAdapter(accountSummaryResponseHandler.getResult());
+        addNARCalculationDataToAdapter(narCalculationResponseHandler.getResult());
 
         accountDetailsButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -87,7 +89,9 @@ public class AccountOverviewActivity extends ListActivity {
         });
     }
 
-    private class NetAnnualizedReturnHandler implements ResponseHandler<NARCalculationData> {
+    class NetAnnualizedReturnHandler implements ResponseHandler<NARCalculationData> {
+
+        private NARCalculationData result;
 
         @Override
         public void onTaskError(Exception exception) {
@@ -97,12 +101,20 @@ public class AccountOverviewActivity extends ListActivity {
 
         @Override
         public void onTaskSuccess(NARCalculationData result) {
-            narCalculationData = result;
+            this.result = result;
             addNARCalculationDataToAdapter(result);
+        }
+
+        @Override
+        public NARCalculationData getResult() {
+            return result;
         }
     }
 
     private void addNARCalculationDataToAdapter(NARCalculationData narCalculationData) {
+
+        if (narCalculationData == null) return;
+
         NumberFormat percentFormat = NumberFormats.PERCENT_FORMAT;
 
         adapter.add(new Pair<String, String>("Adjusted Net Annualized Return",
@@ -111,7 +123,9 @@ public class AccountOverviewActivity extends ListActivity {
                 percentFormat.format(narCalculationData.getWeightedAverageRate())));
     }
 
-    private class AccountSummaryResponseHandler implements ResponseHandler<AccountSummaryData> {
+    class AccountSummaryResponseHandler implements ResponseHandler<AccountSummaryData> {
+
+        private AccountSummaryData result;
 
         @Override
         public void onTaskError(Exception exception) {
@@ -121,12 +135,20 @@ public class AccountOverviewActivity extends ListActivity {
 
         @Override
         public void onTaskSuccess(AccountSummaryData result) {
-            accountSummaryData = result;
+            this.result = result;
             addAccountSummaryDataToAdapter(result);
+        }
+
+        @Override
+        public AccountSummaryData getResult() {
+            return result;
         }
     }
 
     private void addAccountSummaryDataToAdapter(AccountSummaryData accountSummaryData) {
+
+        if (accountSummaryData == null) return;
+
         NumberFormat currencyFormat = NumberFormats.CURRENCY_FORMAT;
 
         adapter.add(new Pair<String, String>("Total Payments",
@@ -154,18 +176,5 @@ public class AccountOverviewActivity extends ListActivity {
         View empty = findViewById(R.id.empty);
         ListView list = (ListView) findViewById(android.R.id.list);
         list.setEmptyView(empty);
-    }
-
-    @Override
-    public void onSaveInstanceState(Bundle savedInstanceState) {
-        super.onSaveInstanceState(savedInstanceState);
-
-        if (this.accountSummaryData != null) {
-            savedInstanceState.putParcelable(AccountSummaryData.class.getName(), accountSummaryData);
-        }
-
-        if (this.narCalculationData != null) {
-            savedInstanceState.putParcelable(NARCalculationData.class.getName(), narCalculationData);
-        }
     }
 }

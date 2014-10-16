@@ -22,6 +22,17 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
         }
     }
+
+    applicationVariants.all {
+        javaCompile.options.compilerArgs.addAll(
+                '-processorpath', configurations.apt.asPath,
+                '-processor', 'com.github.mttkay.memento.MementoProcessor'
+        )
+    }
+}
+
+configurations {
+    apt // create a new classpath for Java APT processors
 }
 
 dependencies {
@@ -30,4 +41,6 @@ dependencies {
     compile 'com.j256.ormlite:ormlite-android:4.43'
     compile 'org.codehaus.jackson:jackson-mapper-asl:1.9.13'
     compile 'com.mcxiaoke.volley:library:1.0.6'
+    compile 'com.github.mttkay.memento:memento:0.2'
+    apt 'com.github.mttkay.memento:memento-processor:0.2'
 }

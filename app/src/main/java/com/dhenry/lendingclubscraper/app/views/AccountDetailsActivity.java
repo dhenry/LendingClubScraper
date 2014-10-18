@@ -24,18 +24,14 @@ import java.text.NumberFormat;
  */
 public class AccountDetailsActivity extends ListActivity {
 
-    private KeyValueAdapter adapter;
-
-    private LendingClubAPI lendingClubAPI;
+    private KeyValueAdapter<String, String> adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_account_details);
 
-        lendingClubAPI = new LendingClubAPIClient(this);
-
-        adapter = new KeyValueAdapter(this);
+        adapter = new KeyValueAdapter<String, String>(this);
         setListAdapter(adapter);
 
         UserData user = getIntent().getParcelableExtra(LendingClubConstants.CURRENT_USER);
@@ -43,7 +39,7 @@ public class AccountDetailsActivity extends ListActivity {
         if (user == null) {
             Toast.makeText(this, "User information missing. Try getAccountSummaryDocument again... :/", Toast.LENGTH_LONG).show();
         } else {
-            lendingClubAPI.getAccountDetails(user, new AccountDetailsResponseHandler());
+            new LendingClubAPIClient(this).getAccountDetails(user, new AccountDetailsResponseHandler());
         }
     }
 

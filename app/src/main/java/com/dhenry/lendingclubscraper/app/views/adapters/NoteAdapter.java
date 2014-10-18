@@ -17,11 +17,12 @@ import com.dhenry.lendingclubscraper.app.persistence.models.NoteData;
 import com.dhenry.lendingclubscraper.app.utilities.NoteOrderer;
 import com.dhenry.lendingclubscraper.app.utilities.NumberFormats;
 
-import org.w3c.dom.Text;
-
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
+
+import butterknife.ButterKnife;
+import butterknife.InjectView;
 
 public class NoteAdapter extends BaseAdapter {
 
@@ -50,8 +51,8 @@ public class NoteAdapter extends BaseAdapter {
     }
 
     @Override
-    public Object getItem(int position) {
-        return position;
+    public NoteData getItem(int position) {
+        return list.get(position);
     }
 
     @Override
@@ -60,38 +61,23 @@ public class NoteAdapter extends BaseAdapter {
     }
 
     @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
-
-        View newView = convertView;
+    public View getView(int position, View view, ViewGroup parent) {
         ViewHolder holder;
-        final int listPosition = position;
-
-        final NoteData currentNote = list.get(listPosition);
-
-        if (null == convertView) {
-            holder = new ViewHolder();
-            newView = inflater.inflate(R.layout.note_summary_row, null);
-            holder.loanGradeLetter = (TextView) newView.findViewById(R.id.loanGradeLetter);
-            holder.loanGradeNumber = (TextView) newView.findViewById(R.id.loanGradeNumber);
-            holder.loanRate = (TextView) newView.findViewById(R.id.loanRate);
-            holder.title = (TextView) newView.findViewById(R.id.title);
-            holder.amountFunded = (TextView) newView.findViewById(R.id.amountFunded);
-            holder.percentageFunded = (ProgressBar) newView.findViewById(R.id.percentageFunded);
-            holder.purchaseLessButton = (Button) newView.findViewById(R.id.subtract25);
-            holder.purchaseMoreButton = (Button) newView.findViewById(R.id.add25);
-            holder.purchaseAmount = (TextView) newView.findViewById(R.id.purchaseAmount);
-            newView.setTag(holder);
-
+        if (view != null) {
+            holder = (ViewHolder) view.getTag();
         } else {
-            holder = (ViewHolder) newView.getTag();
+            view = inflater.inflate(R.layout.note_summary_row, parent, false);
+            holder = new ViewHolder(view);
+            view.setTag(holder);
         }
+
+        final NoteData currentNote = getItem(position);
 
         holder.title.setText(currentNote.getTitle());
         holder.loanRate.setText(percentFormat.format(currentNote.getLoanRate()));
 
-        String loanGrade = currentNote.getLoanGrade();
-
-        int loanGradeColor = getLoanGradeColor(loanGrade);
+        final String loanGrade = currentNote.getLoanGrade();
+        final int loanGradeColor = getLoanGradeColor(loanGrade);
 
         holder.loanGradeLetter.setText(String.valueOf(loanGrade.charAt(0)));
         holder.loanGradeLetter.setBackgroundColor(loanGradeColor);
@@ -104,10 +90,12 @@ public class NoteAdapter extends BaseAdapter {
 
         holder.percentageFunded.setProgress(getPercentFunded(currentNote).intValue());
 
+        final int listPos = position;
+
         holder.purchaseMoreButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                list.set(listPosition, noteOrderer.investIn(currentNote, LendingClubConstants.TWENTY_FIVE_DOLLARS));
+                list.set(listPos, noteOrderer.investIn(currentNote, LendingClubConstants.TWENTY_FIVE_DOLLARS));
                 notifyDataSetChanged();
             }
         });
@@ -115,7 +103,7 @@ public class NoteAdapter extends BaseAdapter {
         holder.purchaseLessButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                list.set(listPosition, noteOrderer.investIn(currentNote, -LendingClubConstants.TWENTY_FIVE_DOLLARS));
+                list.set(listPos, noteOrderer.investIn(currentNote, -LendingClubConstants.TWENTY_FIVE_DOLLARS));
                 notifyDataSetChanged();
             }
         });
@@ -124,7 +112,7 @@ public class NoteAdapter extends BaseAdapter {
 
         togglePurchaseButtons(currentNote, holder);
 
-        return newView;
+        return view;
     }
 
     private void togglePurchaseButtons(NoteData noteData, ViewHolder holder)
@@ -163,15 +151,19 @@ public class NoteAdapter extends BaseAdapter {
     }
 
     static class ViewHolder {
-        TextView loanGradeLetter;
-        TextView loanGradeNumber;
-        TextView loanRate;
-        TextView title;
-        TextView amountFunded;
-        ProgressBar percentageFunded;
-        Button purchaseMoreButton;
-        Button purchaseLessButton;
-        TextView purchaseAmount;
+        @InjectView(R.id.loanGradeLetter) TextView loanGradeLetter;
+        @InjectView(R.id.loanGradeNumber) TextView loanGradeNumber;
+        @InjectView(R.id.loanRate) TextView loanRate;
+        @InjectView(R.id.title) TextView title;
+        @InjectView(R.id.amountFunded) TextView amountFunded;
+        @InjectView(R.id.percentageFunded) ProgressBar percentageFunded;
+        @InjectView(R.id.subtract25) Button purchaseMoreButton;
+        @InjectView(R.id.add25) Button purchaseLessButton;
+        @InjectView(R.id.purchaseAmount) TextView purchaseAmount;
+
+        ViewHolder(View view) {
+            ButterKnife.inject(this, view);
+        }
     }
 
     public void add(NoteData listItem) {
@@ -179,7 +171,7 @@ public class NoteAdapter extends BaseAdapter {
         notifyDataSetChanged();
     }
 
-    public void removeAllViews() {
+    public void clear() {
         list.clear();
         notifyDataSetChanged();
     }

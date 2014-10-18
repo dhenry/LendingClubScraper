@@ -12,15 +12,16 @@ import com.dhenry.lendingclubscraper.app.R;
 
 import java.util.ArrayList;
 
-public class KeyValueAdapter extends BaseAdapter {
+import butterknife.ButterKnife;
+import butterknife.InjectView;
 
-    private Context mContext;
+public class KeyValueAdapter<F, S> extends BaseAdapter {
+
     private static LayoutInflater inflater = null;
-    private ArrayList<Pair<String, String>> list = new ArrayList<Pair<String, String>>();
+    private ArrayList<Pair<F, S>> list = new ArrayList<Pair<F, S>>();
 
     public KeyValueAdapter(Context context) {
-        this.mContext = context;
-        inflater = LayoutInflater.from(mContext);
+        inflater = LayoutInflater.from(context);
     }
 
     @Override
@@ -29,8 +30,8 @@ public class KeyValueAdapter extends BaseAdapter {
     }
 
     @Override
-    public Object getItem(int position) {
-        return position;
+    public Pair<F, S> getItem(int position) {
+        return list.get(position);
     }
 
     @Override
@@ -39,41 +40,41 @@ public class KeyValueAdapter extends BaseAdapter {
     }
 
     @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
+    public View getView(int position, View view, ViewGroup parent) {
 
-        View newView = convertView;
         ViewHolder holder;
 
-        Pair<String, String> curr = list.get(position);
-
-        if (null == convertView) {
-            holder = new ViewHolder();
-            newView = inflater.inflate(R.layout.key_value_view, null);
-            holder.key = (TextView) newView.findViewById(R.id.key);
-            holder.value = (TextView) newView.findViewById(R.id.value);
-            newView.setTag(holder);
-
+        if (view != null) {
+            holder = (ViewHolder) view.getTag();
         } else {
-            holder = (ViewHolder) newView.getTag();
+            view = inflater.inflate(R.layout.key_value_view, parent, false);
+            holder = new ViewHolder(view);
+            view.setTag(holder);
         }
 
-        holder.key.setText(curr.first);
-        holder.value.setText(curr.second);
+        Pair<F, S> item = list.get(position);
 
-        return newView;
+        holder.key.setText(item.first.toString());
+        holder.value.setText(item.second.toString());
+
+        return view;
     }
 
     static class ViewHolder {
-        TextView key;
-        TextView value;
+        @InjectView(R.id.key) TextView key;
+        @InjectView(R.id.value) TextView value;
+
+        ViewHolder(View view) {
+            ButterKnife.inject(this, view);
+        }
     }
 
-    public void add(Pair<String, String> listItem) {
+    public void add(Pair<F, S> listItem) {
         list.add(listItem);
         notifyDataSetChanged();
     }
 
-    public void removeAllViews(){
+    public void clear(){
         list.clear();
         this.notifyDataSetChanged();
     }

@@ -17,7 +17,6 @@ import android.widget.Toast;
 
 import com.dhenry.lendingclubscraper.app.R;
 import com.dhenry.lendingclubscraper.app.constants.LendingClubConstants;
-import com.dhenry.lendingclubscraper.app.lendingClub.LendingClubAPI;
 import com.dhenry.lendingclubscraper.app.lendingClub.ResponseHandler;
 import com.dhenry.lendingclubscraper.app.lendingClub.impl.LendingClubAPIClient;
 import com.dhenry.lendingclubscraper.app.persistence.DatabaseHelper;
@@ -30,58 +29,48 @@ import org.jsoup.helper.StringUtil;
 import java.util.ArrayList;
 import java.util.List;
 
+import butterknife.ButterKnife;
+import butterknife.InjectView;
+import butterknife.OnClick;
+
 
 /**
- * Displays inputs for entering credentials. Tries to getAccountSummaryDocument and scrape the resulting html data
- * on getAccountSummaryDocument success.
+ * App entry point.
  */
 public class LoginActivity extends OrmLiteBaseActivity<DatabaseHelper> {
 
-    private RuntimeExceptionDao<UserData, String> userDao = null;
+    @InjectView(R.id.usernameInput) AutoCompleteTextView usernameInput;
+    @InjectView(R.id.passwordInput) EditText passwordInput;
+    @InjectView(R.id.loginButton) Button loginButton;
+    @InjectView(R.id.saveUser) CheckBox saveUser;
+    @InjectView(R.id.progressIndicator) ProgressBar progressIndicator;
 
-    private AutoCompleteTextView usernameInput;
-    private EditText passwordInput;
-    private Button loginButton;
-    private CheckBox saveUser;
-    private ProgressBar progressIndicator;
+    private RuntimeExceptionDao<UserData, String> userDao;
 
-    private LendingClubAPI lendingClubAPI;
+    @OnClick(R.id.loginButton) void doLogin() {
+        String userEmail = usernameInput.getText().toString();
+        String password = passwordInput.getText().toString();
+
+
+        if (StringUtil.isBlank(userEmail) || StringUtil.isBlank(password)) {
+            Toast.makeText(LoginActivity.this,"Please enter a username and password", Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        showLoadingIndicator(true);
+
+        final UserData userData = new UserData(userEmail, password);
+
+        new LendingClubAPIClient(this).login(userData, new LoginHandler(userData));
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
-
-        lendingClubAPI = new LendingClubAPIClient(this);
-
-        usernameInput = (AutoCompleteTextView) this.findViewById(R.id.usernameInput);
-        passwordInput = (EditText) this.findViewById(R.id.passwordInput);
-        loginButton = (Button) this.findViewById(R.id.loginButton);
-        saveUser = (CheckBox) this.findViewById(R.id.saveUser);
-        progressIndicator = (ProgressBar) findViewById(R.id.progressIndicator);
+        ButterKnife.inject(this);
 
         userDao = getHelper().getRuntimeExceptionDao(UserData.class);
-
-        loginButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-                String userEmail = usernameInput.getText().toString();
-                String password = passwordInput.getText().toString();
-
-
-                if (StringUtil.isBlank(userEmail) || StringUtil.isBlank(password)) {
-                    Toast.makeText(LoginActivity.this,"Please enter a username and password", Toast.LENGTH_LONG).show();
-                    return;
-                }
-
-                showLoadingIndicator(true);
-
-                final UserData userData = new UserData(userEmail, password);
-
-                lendingClubAPI.login(userData, new LoginHandler(userData));
-            }
-        });
     }
 
     private class LoginHandler implements ResponseHandler<Boolean> {

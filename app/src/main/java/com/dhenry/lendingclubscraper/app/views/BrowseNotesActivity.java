@@ -23,14 +23,18 @@ import com.dhenry.lendingclubscraper.app.views.adapters.NoteAdapter;
 import java.util.HashMap;
 import java.util.Map;
 
+import butterknife.ButterKnife;
+import butterknife.InjectView;
+import butterknife.OnClick;
+
 public class BrowseNotesActivity extends ListActivity implements NoteOrderer {
 
-    private Button prevButton;
-    private Button nextButton;
-    private Button reviewOrderButton;
+    @InjectView(R.id.prev) Button prevButton;
+    @InjectView(R.id.next) Button nextButton;
+    @InjectView(R.id.review_order_button) Button reviewOrderButton;
 
     private NoteAdapter adapter;
-    private Integer pageCount ;
+    private Integer pageCount;
 
     private SparseArray<NotesPagedResult> cachedResults = new SparseArray<NotesPagedResult>();
     private Map<String, NoteData> notesToInvestIn = new HashMap<String, NoteData>();
@@ -44,16 +48,31 @@ public class BrowseNotesActivity extends ListActivity implements NoteOrderer {
 
     private LendingClubAPI lendingClubAPI;
 
+    @OnClick(R.id.next) void getNextPage() {
+        increment++;
+        loadList(increment);
+        togglePaginationButtons();
+    }
+
+    @OnClick(R.id.prev) void getPrevPage() {
+        increment--;
+        loadList(increment);
+        togglePaginationButtons();
+    }
+
+    @OnClick(R.id.review_order_button) void checkInOrder() {
+        Toast.makeText(BrowseNotesActivity.this, "Investing in " + notesToInvestIn.size() + " notes.", Toast.LENGTH_LONG).show();
+
+        lendingClubAPI.addNotesToOrder(getIntent().<UserData>getParcelableExtra(LendingClubConstants.CURRENT_USER), notesToInvestIn.values(), checkInOrderHandler);
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_browse_notes);
+        ButterKnife.inject(this);
 
         lendingClubAPI = new LendingClubAPIClient(this);
-
-        setContentView(R.layout.activity_browse_notes);
-        nextButton = (Button)findViewById(R.id.next);
-        prevButton = (Button)findViewById(R.id.prev);
-        reviewOrderButton = (Button)findViewById(R.id.review_order_button);
 
         prevButton.setEnabled(false);
 
@@ -62,36 +81,6 @@ public class BrowseNotesActivity extends ListActivity implements NoteOrderer {
 
         //retrieve the first 25 notes
         loadList(0);
-
-        final UserData currentUser = getIntent().getParcelableExtra(LendingClubConstants.CURRENT_USER);
-
-        nextButton.setOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-                increment++;
-                loadList(increment);
-                togglePaginationButtons();
-            }
-        });
-
-        prevButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                increment--;
-                loadList(increment);
-                togglePaginationButtons();
-            }
-        });
-
-        reviewOrderButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Toast.makeText(BrowseNotesActivity.this, "Investing in " + notesToInvestIn.size() + " notes.", Toast.LENGTH_LONG).show();
-
-                lendingClubAPI.addNotesToOrder(currentUser, notesToInvestIn.values(), checkInOrderHandler);
-            }
-        });
     }
 
     private class CheckInOrderHandler implements ResponseHandler<CheckInOrderResult> {
@@ -188,7 +177,7 @@ public class BrowseNotesActivity extends ListActivity implements NoteOrderer {
     }
 
     private void displayResultsPage(NotesPagedResult result) {
-        adapter.removeAllViews();
+        adapter.clear();
 
         for (NoteData noteData : result.getNotes()) {
             adapter.add(noteData);

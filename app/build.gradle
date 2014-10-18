@@ -23,24 +23,20 @@ android {
         }
     }
 
-    applicationVariants.all {
-        javaCompile.options.compilerArgs.addAll(
-                '-processorpath', configurations.apt.asPath,
-                '-processor', 'com.github.mttkay.memento.MementoProcessor'
-        )
-    }
 }
-
-configurations {
-    apt // create a new classpath for Java APT processors
-}
-
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile 'org.jsoup:jsoup:1.7.2'
-    compile 'com.j256.ormlite:ormlite-android:4.43'
-    compile 'org.codehaus.jackson:jackson-mapper-asl:1.9.13'
-    compile 'com.mcxiaoke.volley:library:1.0.6'
-    compile 'com.github.mttkay.memento:memento:0.2'
-    apt 'com.github.mttkay.memento:memento-processor:0.2'
+
+    compile 'org.jsoup:jsoup:1.7.2' // html scraper
+
+    compile 'com.j256.ormlite:ormlite-android:4.43' // SQLite orm
+
+    compile 'org.codehaus.jackson:jackson-mapper-asl:1.9.13' // JSON
+
+    compile 'com.mcxiaoke.volley:library:1.0.6' // network request management
+
+    compile 'com.github.mttkay.memento:memento:0.2' // retaining objects on configuration change
+    provided 'com.github.mttkay.memento:memento-processor:0.2'
+
+    compile 'com.jakewharton:butterknife:5.1.2' // view injection
 }

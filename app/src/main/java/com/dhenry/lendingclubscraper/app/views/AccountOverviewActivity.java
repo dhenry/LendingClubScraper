@@ -2,7 +2,6 @@ package com.dhenry.lendingclubscraper.app.views;
 
 import android.app.ListActivity;
 import android.content.Intent;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Pair;
 import android.view.View;
@@ -26,15 +25,19 @@ import com.github.mttkay.memento.Retain;
 
 import java.text.NumberFormat;
 
+import butterknife.ButterKnife;
+import butterknife.InjectView;
+import butterknife.OnClick;
+
 /**
  * Author: Dave
  */
 public class AccountOverviewActivity extends ListActivity implements MementoCallbacks {
 
-    private KeyValueAdapter adapter;
+    private KeyValueAdapter<String, String> adapter;
 
-    private Button accountDetailsButton;
-    private Button browseNotesButton;
+    @InjectView(R.id.account_details_button) Button accountDetailsButton;
+    @InjectView(R.id.browse_notes_button) Button browseNotesButton;
 
     @Retain AccountSummaryResponseHandler accountSummaryResponseHandler;
     @Retain NetAnnualizedReturnHandler narCalculationResponseHandler;
@@ -53,40 +56,31 @@ public class AccountOverviewActivity extends ListActivity implements MementoCall
         lendingClubAPI.getNetAnnualizedReturnData(currentUser, narCalculationResponseHandler);
     }
 
+    @OnClick(R.id.account_details_button) void viewAccountDetails() {
+        Intent accountDetailsIntent = new Intent(AccountOverviewActivity.this, AccountDetailsActivity.class);
+        accountDetailsIntent.putExtra(LendingClubConstants.CURRENT_USER, currentUser);
+        startActivity(accountDetailsIntent);
+    }
+
+    @OnClick(R.id.browse_notes_button) void viewBrowseNotes() {
+        Intent browseNotesIntent = new Intent(AccountOverviewActivity.this, BrowseNotesActivity.class);
+        browseNotesIntent.putExtra(LendingClubConstants.CURRENT_USER, currentUser);
+        startActivity(browseNotesIntent);
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         setContentView(R.layout.activity_account_overview);
+        ButterKnife.inject(this);
 
-        accountDetailsButton = (Button)findViewById(R.id.account_details_button);
-        browseNotesButton = (Button)findViewById(R.id.browse_notes_button);
-
-        adapter = new KeyValueAdapter(this);
+        adapter = new KeyValueAdapter<String, String>(this);
         setListAdapter(adapter);
 
         Memento.retain(this);   // retrieve or cache reusable information
 
         addAccountSummaryDataToAdapter(accountSummaryResponseHandler.getResult());
         addNARCalculationDataToAdapter(narCalculationResponseHandler.getResult());
-
-        accountDetailsButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent accountDetailsIntent = new Intent(AccountOverviewActivity.this, AccountDetailsActivity.class);
-                accountDetailsIntent.putExtra(LendingClubConstants.CURRENT_USER, currentUser);
-                startActivity(accountDetailsIntent);
-            }
-        });
-
-        browseNotesButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent browseNotesIntent = new Intent(AccountOverviewActivity.this, BrowseNotesActivity.class);
-                browseNotesIntent.putExtra(LendingClubConstants.CURRENT_USER, currentUser);
-                startActivity(browseNotesIntent);
-            }
-        });
     }
 
     class NetAnnualizedReturnHandler implements ResponseHandler<NARCalculationData> {
